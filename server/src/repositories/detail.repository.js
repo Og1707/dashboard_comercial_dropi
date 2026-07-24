@@ -51,7 +51,7 @@ const getDetail = async (from, to, { country, process, search, limit = 20, offse
     FROM (
       SELECT 1
       ${baseFromWhere}
-      GROUP BY dp.codigo_iso2, dp.nombre_pais, s.nombre_subcuenta, dte.nombre_tipo_envio, dte.nombre_template, m.workflow_id
+      GROUP BY dp.codigo_iso2, dp.nombre_pais, s.nombre_subcuenta, dte.nombre_tipo_envio, m.workflow_id
     ) sub
   `;
 
@@ -79,10 +79,9 @@ const getDetail = async (from, to, { country, process, search, limit = 20, offse
       COALESCE(SUM(
         CASE WHEN m.entregado = TRUE THEN COALESCE(tw.costo_unitario_usd, 0) ELSE 0 END
       ), 0)                                                                   AS cost,
-      dte.nombre_template                                                     AS template,
       COALESCE(m.workflow_id, 'N/A')                                           AS workflow_id
     ${baseFromWhere}
-    GROUP BY dp.codigo_iso2, dp.nombre_pais, s.nombre_subcuenta, dte.nombre_tipo_envio, dte.nombre_template, m.workflow_id
+    GROUP BY dp.codigo_iso2, dp.nombre_pais, s.nombre_subcuenta, dte.nombre_tipo_envio, m.workflow_id
     ORDER BY rate ASC, dp.nombre_pais ASC
     LIMIT ${limitPlaceholder} OFFSET ${offsetPlaceholder}
   `;

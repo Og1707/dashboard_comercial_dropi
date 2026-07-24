@@ -79,18 +79,18 @@ const getAccountWorkList = async (subcuentaName) => {
       c.telefono,
       c.ghl_id                          AS contact_id,
       dte.nombre_tipo_envio             AS process,
-      dte.nombre_template               AS template,
       COALESCE(e.workflow_id, 'N/A')     AS workflow_id,
+      e.codigo_error,
       e.descripcion_error               AS reason,
       e.fecha_error                     AS date
     FROM ${SCHEMA}.dim_subcuentas s
-    INNER JOIN ${SCHEMA}.fact_ordenes_entregadas foe 
-      ON foe.id_subcuenta = s.id_subcuenta
-    INNER JOIN ${SCHEMA}.fact_registro_errores e 
-      ON e.id_orden = foe.id_orden
-    INNER JOIN ${SCHEMA}.dim_contactos c 
+    INNER JOIN ${SCHEMA}.paises p
+      ON p.id_pais = s.id_pais
+    INNER JOIN ${SCHEMA}.fact_registro_errores e
+      ON e.id_pais = p.id_pais
+    INNER JOIN ${SCHEMA}.dim_contactos c
       ON e.id_contacto = c.id_contacto
-    INNER JOIN ${SCHEMA}.dim_tipo_envio dte 
+    INNER JOIN ${SCHEMA}.dim_tipo_envio dte
       ON e.id_tipo_envio = dte.id_tipo_envio
     WHERE s.nombre_subcuenta = $1
       AND e.fecha_error >= CURRENT_DATE

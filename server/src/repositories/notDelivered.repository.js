@@ -26,7 +26,7 @@ const getNotDelivered = async (from, to, { country, reason, limit = 50, offset =
   // Cláusula base compartida para asegurar exactitud entre el conteo total y los datos
   const baseFromWhere = `
     FROM ${SCHEMA}.fact_registro_errores e
-    INNER JOIN ${SCHEMA}.dim_paises dp ON e.id_pais = dp.id_pais
+    INNER JOIN ${SCHEMA}.paises dp ON e.id_pais = dp.id_pais
     INNER JOIN ${SCHEMA}.dim_contactos c ON e.id_contacto = c.id_contacto
     INNER JOIN ${SCHEMA}.dim_tipo_envio dte ON e.id_tipo_envio = dte.id_tipo_envio
     WHERE e.fecha_error >= $1::date
