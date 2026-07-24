@@ -26,6 +26,11 @@ app.use(morgan('combined', {
   stream: { write: (msg) => logger.info(msg.trim()) },
 }));
 
+// ── Redirige la raíz al dashboard ─────────────────────────────────────────
+app.get('/', (req, res) => {
+  res.redirect('/dashboard_control_whatsapp.html');
+});
+
 // ── Static — sirve dashboard.html ─────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '../..', 'public')));
 
