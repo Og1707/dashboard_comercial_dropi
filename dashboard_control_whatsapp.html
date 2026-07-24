@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Operativo Masivos — WhatsApp | Dropi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1418;
+    --surface:#171E24;
+    --surface-2:#1D262D;
+    --border:rgba(255,255,255,0.08);
+    --border-strong:rgba(255,255,255,0.14);
+    --text:#E7ECEF;
+    --text-muted:#8CA0AE;
+    --text-faint:#5A6A75;
+    --green:#2FBF71;
+    --green-dim:rgba(47,191,113,0.14);
+    --red:#E5484D;
+    --red-dim:rgba(229,72,77,0.14);
+    --amber:#F2A93B;
+    --amber-dim:rgba(242,169,59,0.14);
+    --cyan:#3FB6D3;
+    --cyan-dim:rgba(63,182,211,0.14);
+    --radius:10px;
+    --radius-sm:6px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ===== Topbar ===== */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+    padding:20px 28px;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:8px;
+    background:conic-gradient(from 210deg, var(--green), var(--cyan) 40%, var(--green));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:#062615;
+  }
+  .brand-text h1{font-size:15px;margin:0;font-weight:600;letter-spacing:0.2px;}
+  .brand-text p{margin:2px 0 0;font-size:12px;color:var(--text-muted);}
+
+  .tabs{
+    display:flex;gap:4px;background:var(--surface);
+    padding:4px;border-radius:999px;border:1px solid var(--border);
+  }
+  .tab-btn{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;letter-spacing:0.3px;text-transform:uppercase;
+    padding:9px 16px;border-radius:999px;border:none;background:transparent;
+    color:var(--text-muted); cursor:pointer; transition:all .15s ease;
+  }
+  .tab-btn.active{background:var(--surface-2); color:var(--text); box-shadow:inset 0 0 0 1px var(--border-strong);}
+  .tab-btn:hover:not(.active){color:var(--text);}
+
+  .status-cluster{display:flex; align-items:center; gap:18px;}
+  .live-dot-wrap{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);}
+  .live-dot{
+    width:8px;height:8px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 0 0 rgba(47,191,113,0.6);
+    animation:pulse 2.2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(47,191,113,0.55);}
+    70%{box-shadow:0 0 0 8px rgba(47,191,113,0);}
+    100%{box-shadow:0 0 0 0 rgba(47,191,113,0);}
+  }
+  .date-range{display:flex; align-items:center; gap:10px;}
+  .quick-range{display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:3px;}
+  .quick-btn{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.3px;
+    background:transparent; border:none; border-radius:5px; color:var(--text-muted);
+    padding:6px 9px; cursor:pointer; transition:all .15s ease;
+  }
+  .quick-btn.active{background:var(--surface-2); color:var(--cyan); box-shadow:inset 0 0 0 1px rgba(63,182,211,0.3);}
+  .quick-btn:hover:not(.active){color:var(--text);}
+  .date-inputs{display:flex; align-items:center; gap:6px;}
+  .date-sep{color:var(--text-faint); font-size:12px;}
+  .date-input{
+    background:var(--surface); color:var(--text); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:7px 8px; font-family:'JetBrains Mono',monospace;
+    font-size:12px; cursor:pointer; color-scheme:dark;
+  }
+  .date-input:focus{outline:none; border-color:var(--cyan);}
+  select.period{
+    background:var(--surface); color:var(--text); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:8px 10px; font-family:'JetBrains Mono',monospace;
+    font-size:12px; cursor:pointer; color-scheme:dark;
+  }
+
+  main{padding:24px 28px 60px; max-width:1360px; margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block; animation:fadein .25s ease;}
+  @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  .section-label{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:1.2px;
+    text-transform:uppercase; color:var(--text-faint); margin:0 0 10px 2px;
+  }
+
+  /* ===== KPI row ===== */
+  .kpi-row{display:grid; grid-template-columns:1.2fr 1.2fr 1fr; gap:16px; margin-bottom:28px;}
+  .kpi-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px 22px; position:relative; overflow:hidden;
+  }
+  .kpi-card .kpi-label{font-size:12.5px; color:var(--text-muted); margin-bottom:10px;}
+  .kpi-value{font-family:'JetBrains Mono',monospace; font-size:38px; font-weight:700; line-height:1;}
+  .kpi-value.green{color:var(--green);}
+  .kpi-value.amber{color:var(--amber);}
+  .kpi-sub{font-size:12px; color:var(--text-faint); margin-top:8px;}
+  .kpi-card.alert{border-color:rgba(242,169,59,0.35);}
+
+  /* ===== Trend panel ===== */
+  .panel{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px 22px; margin-bottom:28px;
+  }
+  .panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .panel-head h2{font-size:14px; margin:0; font-weight:600;}
+  .legend{display:flex; gap:16px; font-size:12px; color:var(--text-muted);}
+  .legend span{display:flex; align-items:center; gap:6px;}
+  .legend i{width:10px;height:3px; border-radius:2px; display:inline-block;}
+  .chart-svg-wrap{width:100%;}
+  .chart-svg-wrap svg{width:100%; height:auto; display:block;}
+  .chart-svg-wrap text{font-family:'JetBrains Mono',monospace; font-size:9px; fill:var(--text-faint);}
+
+  /* ===== two-column breakdown ===== */
+  .split-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:28px;}
+  .rank-row{
+    display:grid; grid-template-columns:52px 1fr 90px 100px; align-items:center;
+    gap:10px; padding:10px 4px; border-bottom:1px solid var(--border);
+  }
+  .rank-row:last-child{border-bottom:none;}
+  .rank-code{
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:5px;
+    padding:4px 0; text-align:center; color:var(--text-muted);
+  }
+  .rank-name{font-size:13px;}
+  .rank-name small{display:block; color:var(--text-faint); font-size:11px; margin-top:1px;}
+  .rate-cell{display:flex; align-items:center; gap:8px; justify-content:flex-end;}
+  .rate-num{font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600;}
+  .sema{width:8px;height:8px;border-radius:50%; flex-shrink:0;}
+  .sema.red{background:var(--red);} .sema.amber{background:var(--amber);} .sema.green{background:var(--green);}
+  .cost-cell{font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text-muted); text-align:right;}
+  .badge-validation{
+    font-size:10.5px; font-family:'JetBrains Mono',monospace; color:var(--cyan);
+    background:var(--cyan-dim); border:1px solid rgba(63,182,211,0.3);
+    padding:3px 7px; border-radius:5px; white-space:nowrap;
+  }
+
+  /* ===== tables ===== */
+  .filters{display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+  .filters select, .filters input{
+    background:var(--surface-2); color:var(--text); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:8px 10px; font-size:12.5px; font-family:'IBM Plex Sans',sans-serif;
+  }
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  thead th{
+    text-align:left; font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.6px;
+    text-transform:uppercase; color:var(--text-faint); padding:8px 10px; border-bottom:1px solid var(--border-strong);
+  }
+  tbody td{padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:middle;}
+  tbody tr:hover{background:rgba(255,255,255,0.02);}
+  td.num{font-family:'JetBrains Mono',monospace; text-align:right;}
+  .row-country{color:var(--text-muted); font-family:'JetBrains Mono',monospace; font-size:11px;}
+  .checks{font-size:13px; letter-spacing:-1px;}
+  .checks.ok{color:var(--green);}
+  .checks.fail{color:var(--red);}
+
+  .heatmap-table{width:100%; border-collapse:collapse; font-size:12px;}
+  .heatmap-table th{
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.4px; text-transform:uppercase;
+    color:var(--text-faint); padding:8px 6px; text-align:center; border-bottom:1px solid var(--border-strong);
+  }
+  .heatmap-table th:first-child{text-align:left;}
+  .heatmap-table td{padding:8px 6px; text-align:center; border-bottom:1px solid var(--border);}
+  .heatmap-table td.hm-country{
+    text-align:left; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--text);
+    white-space:nowrap;
+  }
+  .heatmap-table td.hm-country small{color:var(--text-faint); font-weight:400;}
+  .hm-cell{
+    font-family:'JetBrains Mono',monospace; font-size:11.5px; border-radius:5px; padding:6px 4px !important;
+    color:var(--text);
+  }
+  .hm-cell.hm-empty{color:var(--text-faint); font-size:10px;}
+  .table-note{font-size:11.5px; color:var(--text-faint); margin-top:10px;}
+  .table-scroll{overflow-x:auto;}
+  .template-name{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--cyan); white-space:nowrap;}
+  .workflow-id{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint); white-space:nowrap; cursor:help;}
+
+  /* ===== vista 3 ===== */
+  .account-picker{display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;}
+  .account-picker label{font-size:12.5px; color:var(--text-muted);}
+  .permission-note{font-size:11px; color:var(--text-faint); font-style:italic;}
+  .worklist{background:var(--surface); border:1px solid rgba(229,72,77,0.25); border-radius:var(--radius); padding:18px 20px; margin-bottom:24px;}
+  .worklist h2{margin:0 0 4px; font-size:14px;}
+  .worklist p{margin:0 0 14px; font-size:12px; color:var(--text-muted);}
+  .work-item{
+    display:grid; grid-template-columns:1fr 1fr 1.3fr 1fr auto; gap:10px; align-items:center;
+    padding:10px 0; border-top:1px solid var(--border); font-size:12.5px;
+  }
+  .work-item:first-child{border-top:none;}
+  .work-phone{font-family:'JetBrains Mono',monospace; color:var(--text);}
+  .work-reason{color:var(--text-muted);}
+  .btn-mini{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase;
+    background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text);
+    padding:6px 10px; border-radius:5px; cursor:pointer;
+  }
+  .btn-mini:hover{border-color:var(--cyan); color:var(--cyan);}
+
+  .footnote{
+    margin-top:30px; padding-top:16px; border-top:1px dashed var(--border);
+    font-size:11.5px; color:var(--text-faint); line-height:1.6;
+  }
+
+  @media (max-width:900px){
+    .kpi-row{grid-template-columns:1fr;}
+    .split-row{grid-template-columns:1fr;}
+    .rank-row{grid-template-columns:40px 1fr 70px;}
+    .cost-cell{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">✓✓</div>
+    <div class="brand-text">
+      <h1>Control Operativo Masivos</h1>
+      <p>WhatsApp · Dropi · Red LatAm (10 países)</p>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-view="v1">Gerencial</button>
+    <button class="tab-btn" data-view="v2">Operativo Global</button>
+    <button class="tab-btn" data-view="v3">Operativo por Cuenta</button>
+  </nav>
+
+  <div class="status-cluster">
+    <div class="live-dot-wrap"><span class="live-dot"></span> Última actualización: hoy, 08:41</div>
+    <div class="date-range">
+      <div class="quick-range">
+        <button class="quick-btn" data-days="0">Hoy</button>
+        <button class="quick-btn" data-days="6">7D</button>
+        <button class="quick-btn active" data-days="29">30D</button>
+      </div>
+      <div class="date-inputs">
+        <input type="date" id="dateFrom" class="date-input">
+        <span class="date-sep">→</span>
+        <input type="date" id="dateTo" class="date-input">
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ VISTA 1: GERENCIAL ============ -->
+  <section id="v1" class="view active">
+
+    <div class="kpi-row" style="grid-template-columns:1fr 1fr;">
+      <div class="kpi-card">
+        <div class="kpi-label">Tasa de entrega global</div>
+        <div class="kpi-value amber">91.4%</div>
+        <div class="kpi-sub" id="kpiSubProcessed">73,090 mensajes procesados · últimos 30 días</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Costo total estimado</div>
+        <div class="kpi-value">$11,460</div>
+        <div class="kpi-sub">USD · tarifa por país + tipo de plantilla</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Envíos por proceso, por día</h2>
+          <p id="trendRangeLabel" style="margin:3px 0 0; font-size:11px; color:var(--text-faint);"></p>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="legend" id="trendLegend"></div>
+          <select id="trendCountryFilter" class="date-input" style="cursor:pointer;">
+            <option value="Todos">Todos los países</option>
+          </select>
+        </div>
+      </div>
+      <div id="trendChart" class="chart-svg-wrap"></div>
+      <p class="table-note">Marketing/Eventos no se incluye aquí — su instrumentación todavía está en validación (ver nota al pie).</p>
+    </div>
+
+    <div class="split-row">
+      <div class="panel">
+        <p class="section-label">Capa 3 — por país (peor → mejor)</p>
+        <div id="countryRanking"></div>
+      </div>
+      <div class="panel">
+        <p class="section-label">Capa 3 — por proceso (peor → mejor)</p>
+        <div id="processRanking"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Capa 3 — volumen de envíos: país × proceso</p>
+      <div id="volumeHeatmap"></div>
+      <p class="table-note">Intensidad del color = volumen relativo de envíos. Responde "¿qué país envía más de qué proceso?" de un vistazo.</p>
+    </div>
+
+    <div class="footnote">
+      Nota de diseño — Marketing/Eventos se instrumenta por un flujo distinto en GHL; se muestra separado hasta confirmar que llega con la misma estructura que los otros 4 procesos. El semáforo (rojo &lt;85% · ámbar 85–93% · verde &gt;93%) es un punto de partida, no un umbral fijo — se recomienda calibrarlo con datos reales de 2–3 semanas antes de fijarlo como estándar.
+    </div>
+  </section>
+
+  <!-- ============ VISTA 2: OPERATIVO GLOBAL ============ -->
+  <section id="v2" class="view">
+
+    <p class="section-label">Capas 1–3 — mismo panorama que gerencia, con integridad del dato incluida</p>
+
+    <div class="kpi-row" style="grid-template-columns:1fr 1fr 1fr; margin-bottom:16px;">
+      <div class="kpi-card">
+        <div class="kpi-label">Tasa de entrega global</div>
+        <div class="kpi-value amber">91.4%</div>
+        <div class="kpi-sub" id="kpiSubProcessedV2">73,090 mensajes procesados · últimos 30 días</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Costo total estimado</div>
+        <div class="kpi-value">$11,460</div>
+        <div class="kpi-sub">USD · tarifa por país + tipo de plantilla</div>
+      </div>
+      <div class="kpi-card alert">
+        <div class="kpi-label">Integridad del dato</div>
+        <div class="kpi-value" style="font-size:26px; color:var(--amber);">⚠ 2 / 15</div>
+        <div class="kpi-sub">subcuentas donde procesados ≠ entregados + no entregados</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Envíos por proceso, por día</h2>
+          <p id="trendRangeLabelV2" style="margin:3px 0 0; font-size:11px; color:var(--text-faint);"></p>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="legend" id="trendLegendV2"></div>
+          <select id="trendCountryFilterV2" class="date-input" style="cursor:pointer;">
+            <option value="Todos">Todos los países</option>
+          </select>
+        </div>
+      </div>
+      <div id="trendChartV2" class="chart-svg-wrap"></div>
+      <p class="table-note">Marketing/Eventos no se incluye aquí — instrumentación en validación.</p>
+    </div>
+
+    <div class="split-row">
+      <div class="panel">
+        <p class="section-label">Por país (peor → mejor)</p>
+        <div id="countryRankingV2"></div>
+      </div>
+      <div class="panel">
+        <p class="section-label">Por proceso (peor → mejor)</p>
+        <div id="processRankingV2"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Volumen de envíos: país × proceso</p>
+      <div id="volumeHeatmapV2"></div>
+    </div>
+
+    <p class="section-label" style="margin-top:28px;">Capa 4 — detalle operativo (esto es lo que gerencia no ve)</p>
+
+    <div class="panel">
+      <p class="section-label">Detalle por país → subcuenta → proceso</p>
+      <div class="filters">
+        <select id="filterCountry"><option value="">País: todos</option></select>
+        <select id="filterProcess"><option value="">Proceso: todos</option></select>
+        <input type="text" placeholder="Buscar subcuenta…" id="filterSearch">
+      </div>
+      <div class="table-scroll">
+      <table id="detailTable">
+        <thead>
+          <tr>
+            <th>País</th><th>Subcuenta</th><th>Proceso</th>
+            <th style="text-align:right">Procesados</th><th style="text-align:right">Entregados</th>
+            <th style="text-align:right">No entreg.</th><th style="text-align:right">Tasa</th>
+            <th style="text-align:right">Costo est.</th>
+            <th>Plantilla</th><th>Workflow ID</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      </div>
+      <p class="table-note">Colombia aparece con una fila por proceso porque opera con subcuentas separadas; el resto de los países opera con una sola subcuenta cubriendo los 5 procesos.</p>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Listado de contactos no entregados <span style="color:var(--red); text-transform:none; letter-spacing:0;">— 318 en total en el período</span></p>
+      <div class="filters">
+        <select id="filterCountry2"><option value="">País: todos</option></select>
+        <select id="filterReason"><option value="">Motivo: todos</option></select>
+      </div>
+      <div class="table-scroll">
+      <table id="notDeliveredTable">
+        <thead>
+          <tr><th>Teléfono</th><th>Contact ID</th><th>País</th><th>Proceso</th><th>Plantilla</th><th>Workflow ID</th><th>Motivo de falla</th><th>Fecha</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VISTA 3: OPERATIVO POR CUENTA ============ -->
+  <section id="v3" class="view">
+
+    <div class="account-picker">
+      <label>Subcuenta:</label>
+      <select id="accountPicker" class="period"></select>
+      <span class="permission-note">* Selector solo para navegar este prototipo — en producción el acceso queda restringido por permisos de Metabase, cada usuario ve únicamente su propia cuenta.</span>
+    </div>
+
+    <div class="worklist">
+      <h2>Lista de trabajo — no entregados de hoy</h2>
+      <p>Contactos que no recibieron el mensaje en las últimas 24 horas. Prioriza según motivo de falla.</p>
+      <div id="workItems"></div>
+    </div>
+
+    <div class="kpi-row" style="grid-template-columns:1fr 1fr 1fr;">
+      <div class="kpi-card">
+        <div class="kpi-label">Tasa de entrega — esta cuenta</div>
+        <div class="kpi-value" id="acctRate">96.0%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Costo estimado — esta cuenta</div>
+        <div class="kpi-value" id="acctCost">$1,245</div>
+      </div>
+      <div class="kpi-card" id="acctIntegrityCard">
+        <div class="kpi-label">Integridad del dato</div>
+        <div class="kpi-value" id="acctIntegrity" style="font-size:26px;">✓ OK</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Envíos por proceso, por día — esta cuenta</h2>
+          <p id="trendRangeLabelV3" style="margin:3px 0 0; font-size:11px; color:var(--text-faint);"></p>
+        </div>
+        <div class="legend" id="trendLegendV3"></div>
+      </div>
+      <div id="trendChartV3" class="chart-svg-wrap"></div>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Por proceso — esta cuenta</p>
+      <div id="processRankingV3"></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ---------- Tabs ---------- */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.view).classList.add('active');
+  });
+});
+
+/* ---------- Datos de muestra (reemplazar por conexión real a Metabase/Postgres) ---------- */
+const countries = [
+  {code:'VE', name:'Venezuela',   processed:6120, delivered:4651, failed:1469, rate:76.0, cost:812},
+  {code:'CO', name:'Colombia',    processed:9840, delivered:8266, failed:1574, rate:84.0, cost:1390},
+  {code:'EC', name:'Ecuador',     processed:4210, delivered:3747, failed:463,  rate:89.0, cost:601},
+  {code:'PE', name:'Perú',        processed:5330, delivered:4850, failed:480,  rate:91.0, cost:742},
+  {code:'PY', name:'Paraguay',    processed:2140, delivered:1969, failed:171,  rate:92.0, cost:305},
+  {code:'CR', name:'Costa Rica',  processed:1870, delivered:1739, failed:131,  rate:93.0, cost:268},
+  {code:'PA', name:'Panamá',      processed:2050, delivered:1948, failed:102,  rate:95.0, cost:301},
+  {code:'AR', name:'Argentina',   processed:7460, delivered:7161, failed:299,  rate:96.0, cost:1029},
+  {code:'MX', name:'México',      processed:11230,delivered:10893,failed:337,  rate:97.0, cost:1587},
+  {code:'CL', name:'Chile',       processed:8930, delivered:8751, failed:179,  rate:98.0, cost:1245},
+];
+
+const processes = [
+  {name:'Garantías — Proveedores',   processed:9800, delivered:8036, failed:1764, rate:82.0, cost:1410, validation:false},
+  {name:'Confirmación de Órdenes',   processed:18200,delivered:16380,failed:1820, rate:90.0, cost:2470, validation:false},
+  {name:'Garantías — Dropshippers',  processed:8120, delivered:7470, failed:650,  rate:92.0, cost:1180, validation:false},
+  {name:'Despacho de Órdenes',       processed:15400,delivered:14630,failed:770,  rate:95.0, cost:2050, validation:false},
+  {name:'Marketing / Eventos',       processed:null, delivered:null, failed:null, rate:null,  cost:null, validation:true},
+];
+
+function semaColor(rate){
+  if(rate===null) return null;
+  if(rate<85) return 'red';
+  if(rate<93) return 'amber';
+  return 'green';
+}
+
+/* ---------- Trazabilidad: nombre de plantilla + workflow ID (determinístico por país+proceso) ---------- */
+const PROCESS_SLUGS = {
+  'Confirmación de Órdenes':  'confirmacion_pedido',
+  'Despacho de Órdenes':      'despacho_pedido',
+  'Garantías — Dropshippers': 'garantia_dropshipper',
+  'Garantías — Proveedores':  'garantia_proveedor',
+};
+
+function hashStringToSeed(str){
+  let h = 0;
+  for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) >>> 0; }
+  return h || 1;
+}
+function pseudoUUID(key){
+  let s = hashStringToSeed(key), hex = '';
+  for(let i=0;i<32;i++){ s = (s*1103515245 + 12345) >>> 0; hex += (s % 16).toString(16); }
+  return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20,32)}`;
+}
+function getTemplateInfo(processName, countryCode){
+  const slug = PROCESS_SLUGS[processName] || processName.toLowerCase().replace(/\s+/g,'_');
+  return {
+    template: `${slug}_${countryCode.toLowerCase()}_v2`,
+    workflowId: pseudoUUID(`${countryCode}-${processName}`)
+  };
+}
+
+/* ---------- Ranking capa 3 ---------- */
+function renderRanking(target, items, isCountry){
+  const el = document.getElementById(target);
+  el.innerHTML = items.map(it=>{
+    if(it.validation){
+      return `<div class="rank-row">
+        <div class="rank-code">—</div>
+        <div class="rank-name">${it.name}<small>Instrumentación pendiente de validar</small></div>
+        <div class="rate-cell"><span class="badge-validation">En validación</span></div>
+        <div class="cost-cell">—</div>
+      </div>`;
+    }
+    const c = semaColor(it.rate);
+    const traceInfo = it.template ? ` · <span class="template-name" style="font-size:11px;" title="Workflow: ${it.workflowId}">${it.template}</span>` : '';
+    return `<div class="rank-row">
+      <div class="rank-code">${isCountry ? it.code : '·'}</div>
+      <div class="rank-name">${it.name}<small>${it.processed.toLocaleString('es')} procesados${traceInfo}</small></div>
+      <div class="rate-cell"><span class="sema ${c}"></span><span class="rate-num">${it.rate.toFixed(1)}%</span></div>
+      <div class="cost-cell">$${it.cost.toLocaleString('es')}</div>
+    </div>`;
+  }).join('');
+}
+renderRanking('countryRanking', countries, true);
+renderRanking('processRanking', processes, false);
+
+/* ---------- Envíos por proceso, por día (filtrable por país) ---------- */
+const TODAY = new Date(2026, 6, 20); // referencia "hoy" del mockup
+
+function fmtDateEs(d){
+  const meses = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${meses[d.getMonth()]} ${d.getDate()}`;
+}
+function toISO(d){ return d.toISOString().slice(0,10); }
+
+// 4 procesos con dato real; Marketing/Eventos queda fuera hasta validar su instrumentación
+const PROCESS_VOLUME_CONFIG = [
+  {name:'Confirmación de Órdenes',   base:620, growth:6,  noise:80, color:'#3FB6D3'},
+  {name:'Despacho de Órdenes',       base:510, growth:4,  noise:70, color:'#7C8CF8'},
+  {name:'Garantías — Dropshippers',  base:270, growth:2,  noise:40, color:'#C77DFF'},
+  {name:'Garantías — Proveedores',   base:310, growth:-1, noise:45, color:'#D9A441'},
+];
+const totalProcessedAllCountries = countries.reduce((a,c)=>a+c.processed,0);
+
+let cachedDays = [];
+let cachedSeriesByScope = {};
+
+function nationalSeriesRaw(n){
+  const map = {};
+  PROCESS_VOLUME_CONFIG.forEach(p=>{
+    map[p.name] = Array.from({length:n}, (_,i)=> Math.max(0, Math.round(p.base + p.growth*i + (Math.random()-0.5)*p.noise)));
+  });
+  return map;
+}
+
+function scaleSeriesForCountry(national, country){
+  const scaled = (country.processed / totalProcessedAllCountries) * countries.length; // ~1 = envío promedio
+  const map = {};
+  PROCESS_VOLUME_CONFIG.forEach(p=>{
+    map[p.name] = national[p.name].map(v=> Math.max(0, Math.round(v*scaled*(0.85+Math.random()*0.3))));
+  });
+  return map;
+}
+
+function computeSeriesByScope(n){
+  const scope = { 'Todos': nationalSeriesRaw(n) };
+  countries.forEach(c=>{ scope[c.name] = scaleSeriesForCountry(scope['Todos'], c); });
+  return scope;
+}
+
+/* Fábrica de gráficos de tendencia: permite tener una instancia en Vista Gerencial
+   y otra en Vista Operativa Global, ambas leyendo de los mismos datos cacheados. */
+function renderMultiLineSVG(containerId, seriesMap, configs){
+  const W = 900, H = 260, padL = 44, padR = 10, padT = 10, padB = 22;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const allVals = Object.values(seriesMap).flat();
+  const maxV = Math.max(...allVals, 1) * 1.15;
+  const n = cachedDays.length;
+
+  const x = i => n>1 ? padL + (i/(n-1)) * plotW : padL + plotW/2;
+  const y = v => padT + plotH - (v/maxV) * plotH;
+
+  function linePath(series){
+    return series.map((v,i)=> (i===0?'M':'L') + x(i).toFixed(1) + ',' + y(v).toFixed(1)).join(' ');
+  }
+
+  let grid = '';
+  for(let d=0; d<=4; d++){
+    const v = (maxV/4)*d;
+    const gy = y(v);
+    grid += `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${W-padR}" y2="${gy.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;
+    grid += `<text x="${padL-8}" y="${(gy+3).toFixed(1)}" text-anchor="end">${Math.round(v).toLocaleString('es')}</text>`;
+  }
+
+  let xLabels = '';
+  const step = Math.max(1, Math.round(n/8));
+  for(let i=0;i<n;i+=step){
+    xLabels += `<text x="${x(i).toFixed(1)}" y="${H-4}" text-anchor="middle">${cachedDays[i]}</text>`;
+  }
+
+  const lines = configs.map(p=>
+    `<path d="${linePath(seriesMap[p.name])}" fill="none" stroke="${p.color}" stroke-width="2"/>`
+  ).join('');
+
+  document.getElementById(containerId).innerHTML = `
+  <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    ${grid}${lines}${xLabels}
+  </svg>`;
+}
+
+function createTrendChart(ids){
+  const filterEl = document.getElementById(ids.filter);
+  filterEl.innerHTML += countries.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+
+  function renderLegend(){
+    document.getElementById(ids.legend).innerHTML = PROCESS_VOLUME_CONFIG.map(p=>
+      `<span><i style="background:${p.color}"></i> ${p.name}</span>`
+    ).join('');
+  }
+
+  function renderSVG(seriesMap){
+    renderMultiLineSVG(ids.container, seriesMap, PROCESS_VOLUME_CONFIG);
+  }
+
+  function updateLabels(seriesMap){
+    const n = cachedDays.length;
+    const totalProcessed = Object.values(seriesMap).reduce((sum,arr)=> sum + arr.reduce((a,b)=>a+b,0), 0);
+    const label = n===1 ? cachedDays[0] : `${cachedDays[0]} — ${cachedDays[n-1]} (${n} días)`;
+    const scope = filterEl.value;
+    const scopeText = scope==='Todos' ? 'todos los países' : scope;
+    if(ids.kpiSub){
+      const kpiSub = document.getElementById(ids.kpiSub);
+      if(kpiSub) kpiSub.textContent = `${totalProcessed.toLocaleString('es')} mensajes procesados · últimos ${n} días`;
+    }
+    const rangeLabel = document.getElementById(ids.rangeLabel);
+    if(rangeLabel) rangeLabel.textContent = `${label} · ${scopeText}`;
+  }
+
+  function render(){
+    const scope = filterEl.value || 'Todos';
+    const seriesMap = cachedSeriesByScope[scope];
+    renderLegend();
+    renderSVG(seriesMap);
+    updateLabels(seriesMap);
+  }
+
+  filterEl.addEventListener('change', render);
+  return { render };
+}
+
+const trendInstances = [
+  createTrendChart({filter:'trendCountryFilter', legend:'trendLegend', container:'trendChart', rangeLabel:'trendRangeLabel', kpiSub:'kpiSubProcessed'}),
+  createTrendChart({filter:'trendCountryFilterV2', legend:'trendLegendV2', container:'trendChartV2', rangeLabel:'trendRangeLabelV2', kpiSub:'kpiSubProcessedV2'}),
+];
+
+function generateRange(fromDate, toDate){
+  const from = new Date(fromDate), to = new Date(toDate);
+  let n = Math.round((to - from) / 86400000) + 1;
+  n = Math.max(1, Math.min(n, 120)); // límite razonable para legibilidad del gráfico
+
+  cachedDays = Array.from({length:n}, (_,i)=>{
+    const d = new Date(from); d.setDate(d.getDate()+i); return fmtDateEs(d);
+  });
+  cachedSeriesByScope = computeSeriesByScope(n);
+  trendInstances.forEach(inst=>inst.render());
+}
+
+/* ---------- Capa 3 — heatmap país × proceso (misma matriz para ambas vistas) ---------- */
+function computeHeatmapMatrix(){
+  const procs = PROCESS_VOLUME_CONFIG.map(p=>p.name);
+  return countries.map(c=>{
+    const share = c.processed / totalProcessedAllCountries;
+    const values = {};
+    procs.forEach((name, idx)=>{
+      const monthlyBase = PROCESS_VOLUME_CONFIG[idx].base * 30;
+      values[name] = Math.max(0, Math.round(monthlyBase * share * countries.length * (0.7+Math.random()*0.6)));
+    });
+    return {country:c, values};
+  });
+}
+
+function renderHeatmap(targetId, matrix){
+  const procs = PROCESS_VOLUME_CONFIG.map(p=>p.name);
+  let maxCell = 0;
+  matrix.forEach(row=> procs.forEach(name=> maxCell = Math.max(maxCell, row.values[name])));
+
+  const header = `<tr><th>País</th>${procs.map(n=>`<th>${n}</th>`).join('')}<th>Marketing</th></tr>`;
+  const rows = matrix.map(row=>{
+    const cells = procs.map(name=>{
+      const v = row.values[name];
+      const intensity = v/maxCell;
+      const bg = `rgba(63,182,211,${(0.08+intensity*0.42).toFixed(2)})`;
+      return `<td class="hm-cell" style="background:${bg}">${v.toLocaleString('es')}</td>`;
+    }).join('');
+    return `<tr>
+      <td class="hm-country">${row.country.name} <small>${row.country.code}</small></td>
+      ${cells}
+      <td class="hm-cell hm-empty">en validación</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById(targetId).innerHTML = `<table class="heatmap-table">${header}${rows}</table>`;
+}
+
+const heatmapMatrix = computeHeatmapMatrix();
+renderHeatmap('volumeHeatmap', heatmapMatrix);
+renderHeatmap('volumeHeatmapV2', heatmapMatrix);
+
+/* ---------- Rankings duplicados en Vista 2 (mismos datos, sin aleatoriedad = consistentes) ---------- */
+renderRanking('countryRankingV2', countries, true);
+renderRanking('processRankingV2', processes, false);
+
+/* ---------- Selector de rango de fechas (libre, no predeterminado) ---------- */
+const dateFromEl = document.getElementById('dateFrom');
+const dateToEl = document.getElementById('dateTo');
+
+function setRangeFromInputs(){
+  if(!dateFromEl.value || !dateToEl.value) return;
+  if(dateFromEl.value > dateToEl.value){ dateToEl.value = dateFromEl.value; }
+  generateRange(dateFromEl.value, dateToEl.value);
+}
+
+dateFromEl.max = toISO(TODAY);
+dateToEl.max = toISO(TODAY);
+dateToEl.value = toISO(TODAY);
+const defaultFrom = new Date(TODAY); defaultFrom.setDate(defaultFrom.getDate()-29);
+dateFromEl.value = toISO(defaultFrom);
+
+dateFromEl.addEventListener('change', ()=>{ clearQuickActive(); setRangeFromInputs(); });
+dateToEl.addEventListener('change', ()=>{ clearQuickActive(); setRangeFromInputs(); });
+
+function clearQuickActive(){
+  document.querySelectorAll('.quick-btn').forEach(b=>b.classList.remove('active'));
+}
+document.querySelectorAll('.quick-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    clearQuickActive();
+    btn.classList.add('active');
+    const daysBack = parseInt(btn.dataset.days, 10);
+    const from = new Date(TODAY); from.setDate(from.getDate()-daysBack);
+    dateFromEl.value = toISO(from);
+    dateToEl.value = toISO(TODAY);
+    generateRange(dateFromEl.value, dateToEl.value);
+  });
+});
+
+// Carga inicial: últimos 30 días
+generateRange(dateFromEl.value, dateToEl.value);
+
+/* ---------- Vista 2: tabla detalle país→subcuenta→proceso ---------- */
+const detailRows = [];
+countries.forEach(c=>{
+  if(c.code==='CO'){
+    processes.filter(p=>!p.validation).forEach(p=>{
+      const processed = Math.round(c.processed/5*(0.8+Math.random()*0.4));
+      const rate = Math.max(70, Math.min(99, c.rate + (Math.random()*10-5)));
+      const delivered = Math.round(processed*rate/100);
+      const {template, workflowId} = getTemplateInfo(p.name, c.code);
+      detailRows.push({country:c.name, code:c.code, account:`Colombia — ${p.name}`, process:p.name,
+        processed, delivered, failed:processed-delivered, rate, cost:Math.round(processed*0.14), template, workflowId});
+    });
+  } else {
+    processes.filter(p=>!p.validation).forEach(p=>{
+      const processed = Math.round(c.processed/5*(0.8+Math.random()*0.4));
+      const rate = Math.max(70, Math.min(99, c.rate + (Math.random()*6-3)));
+      const delivered = Math.round(processed*rate/100);
+      const {template, workflowId} = getTemplateInfo(p.name, c.code);
+      detailRows.push({country:c.name, code:c.code, account:`${c.name} — Cuenta única`, process:p.name,
+        processed, delivered, failed:processed-delivered, rate, cost:Math.round(processed*0.14), template, workflowId});
+    });
+  }
+});
+
+function renderDetailTable(rows){
+  document.querySelector('#detailTable tbody').innerHTML = rows.slice(0,18).map(r=>`
+    <tr>
+      <td class="row-country">${r.code}</td>
+      <td>${r.account}</td>
+      <td>${r.process}</td>
+      <td class="num">${r.processed.toLocaleString('es')}</td>
+      <td class="num">${r.delivered.toLocaleString('es')}</td>
+      <td class="num">${r.failed.toLocaleString('es')}</td>
+      <td class="num"><span class="sema ${semaColor(r.rate)}" style="display:inline-block;margin-right:6px;"></span>${r.rate.toFixed(1)}%</td>
+      <td class="num">$${r.cost.toLocaleString('es')}</td>
+      <td class="template-name">${r.template}</td>
+      <td class="workflow-id" title="${r.workflowId}">${r.workflowId.slice(0,8)}…</td>
+    </tr>`).join('') + `<tr><td colspan="10" style="text-align:center; color:var(--text-faint); font-size:11px; padding-top:12px;">Mostrando 18 de ${rows.length} filas — muestra representativa</td></tr>`;
+}
+renderDetailTable(detailRows);
+
+const countryOptions = countries.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+['filterCountry','filterCountry2'].forEach(id=>document.getElementById(id).innerHTML += countryOptions);
+document.getElementById('filterProcess').innerHTML += processes.filter(p=>!p.validation).map(p=>`<option value="${p.name}">${p.name}</option>`).join('');
+
+function applyFilters(){
+  const country = document.getElementById('filterCountry').value;
+  const process = document.getElementById('filterProcess').value;
+  const search = document.getElementById('filterSearch').value.toLowerCase();
+  const filtered = detailRows.filter(r =>
+    (!country || r.country===country) &&
+    (!process || r.process===process) &&
+    (!search || r.account.toLowerCase().includes(search))
+  );
+  renderDetailTable(filtered);
+}
+['filterCountry','filterProcess','filterSearch'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', applyFilters);
+  document.getElementById(id).addEventListener('change', applyFilters);
+});
+
+/* ---------- Listado no entregados ---------- */
+const failureReasons = ['Número inválido', 'Ventana 24h vencida', 'Opt-out del contacto', 'Sin WhatsApp activo'];
+const notDelivered = Array.from({length:8}, (_,i)=>{
+  const c = countries[Math.floor(Math.random()*countries.length)];
+  const p = processes.filter(p=>!p.validation)[Math.floor(Math.random()*4)];
+  const {template, workflowId} = getTemplateInfo(p.name, c.code);
+  return {
+    phone:`+${Math.floor(Math.random()*900+100)} •••• ${Math.floor(Math.random()*9000+1000)}`,
+    contactId:`CT-${(10000+i*137)}`,
+    country:c.name,
+    process:p.name,
+    template, workflowId,
+    reason:failureReasons[Math.floor(Math.random()*failureReasons.length)],
+    date:`Jul ${18+Math.floor(Math.random()*3)}`
+  };
+});
+document.querySelector('#notDeliveredTable tbody').innerHTML = notDelivered.map(r=>`
+  <tr>
+    <td class="mono">${r.phone}</td>
+    <td class="mono">${r.contactId}</td>
+    <td>${r.country}</td>
+    <td>${r.process}</td>
+    <td class="template-name">${r.template}</td>
+    <td class="workflow-id" title="${r.workflowId}">${r.workflowId.slice(0,8)}…</td>
+    <td>${r.reason}</td>
+    <td class="mono">${r.date}</td>
+  </tr>`).join('');
+
+
+/* ---------- Vista 3: por cuenta (mismo panorama que Operativo Global, acotado a 1 cuenta) ---------- */
+const FLAGGED_ACCOUNTS = new Set(['Venezuela — Cuenta única', 'Colombia — Confirmación de Órdenes']);
+
+function buildAccountsV3(){
+  const map = {};
+  detailRows.forEach(r=>{
+    if(!map[r.account]) map[r.account] = { country:r.country, code:r.code, rows:[] };
+    map[r.account].rows.push(r);
+  });
+  return map;
+}
+const accountsV3 = buildAccountsV3();
+
+const picker = document.getElementById('accountPicker');
+picker.innerHTML = Object.keys(accountsV3).map(a=>`<option value="${a}">${a}</option>`).join('');
+
+function renderAccount(name){
+  const acc = accountsV3[name];
+  const rows = acc.rows;
+
+  // KPIs agregados de esta cuenta
+  const processed = rows.reduce((s,r)=>s+r.processed,0);
+  const delivered = rows.reduce((s,r)=>s+r.delivered,0);
+  const cost = rows.reduce((s,r)=>s+r.cost,0);
+  const rate = processed>0 ? (delivered/processed*100) : 0;
+
+  document.getElementById('acctRate').textContent = rate.toFixed(1)+'%';
+  document.getElementById('acctRate').className = 'kpi-value ' + semaColor(rate);
+  document.getElementById('acctCost').textContent = '$'+cost.toLocaleString('es');
+
+  const flagged = FLAGGED_ACCOUNTS.has(name);
+  const integrityCard = document.getElementById('acctIntegrityCard');
+  const integrityVal = document.getElementById('acctIntegrity');
+  integrityCard.classList.toggle('alert', flagged);
+  integrityVal.textContent = flagged ? '⚠ 1 caso' : '✓ OK';
+  integrityVal.style.color = flagged ? 'var(--amber)' : 'var(--green)';
+
+  // Lista de trabajo — no entregados de hoy (sintetizada a partir de los procesos de esta cuenta)
+  const items = rows.slice(0, 3).map((r,i)=>({
+    phone: `+${['56','57','58','52','54','51'][i%6]} •••• ${1000+ (r.processed % 8999)}`,
+    reason: failureReasons[(r.processed+i) % failureReasons.length],
+    process: r.process,
+    template: r.template,
+    workflowId: r.workflowId
+  }));
+  document.getElementById('workItems').innerHTML = items.map(it=>`
+    <div class="work-item">
+      <span class="work-phone">${it.phone}</span>
+      <span>${it.process}</span>
+      <span class="work-reason">${it.reason}</span>
+      <span class="template-name" title="Workflow: ${it.workflowId}">${it.template}</span>
+      <button class="btn-mini">Re-contactar</button>
+    </div>`).join('');
+
+  // Tendencia — reutiliza los mismos datos cacheados que gerencia/operativo global
+  const isColombiaProcess = acc.code === 'CO';
+  let seriesMap, configs;
+  if(isColombiaProcess){
+    const processName = rows[0].process;
+    const config = PROCESS_VOLUME_CONFIG.find(p=>p.name===processName);
+    seriesMap = { [processName]: cachedSeriesByScope[acc.country][processName] };
+    configs = [config];
+  } else {
+    seriesMap = cachedSeriesByScope[acc.country];
+    configs = PROCESS_VOLUME_CONFIG;
+  }
+  document.getElementById('trendLegendV3').innerHTML = configs.map(p=>
+    `<span><i style="background:${p.color}"></i> ${p.name}</span>`
+  ).join('');
+  renderMultiLineSVG('trendChartV3', seriesMap, configs);
+  const n = cachedDays.length;
+  const rangeText = n===1 ? cachedDays[0] : `${cachedDays[0]} — ${cachedDays[n-1]} (${n} días)`;
+  document.getElementById('trendRangeLabelV3').textContent = `${rangeText} · ${name}`;
+
+  // Ranking por proceso — esta cuenta
+  const rankingItems = rows.map(r=>({name:r.process, processed:r.processed, rate:r.rate, cost:r.cost, validation:false, template:r.template, workflowId:r.workflowId}))
+    .sort((a,b)=>a.rate-b.rate);
+  renderRanking('processRankingV3', rankingItems, false);
+}
+
+picker.addEventListener('change', e=>renderAccount(e.target.value));
+renderAccount(picker.value);
+</script>
+</body>
+</html>

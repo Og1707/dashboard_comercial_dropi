@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Operativo Masivos — WhatsApp | Dropi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1418;
+    --surface:#171E24;
+    --surface-2:#1D262D;
+    --border:rgba(255,255,255,0.08);
+    --border-strong:rgba(255,255,255,0.14);
+    --text:#E7ECEF;
+    --text-muted:#8CA0AE;
+    --text-faint:#5A6A75;
+    --green:#2FBF71;
+    --green-dim:rgba(47,191,113,0.14);
+    --red:#E5484D;
+    --red-dim:rgba(229,72,77,0.14);
+    --amber:#F2A93B;
+    --amber-dim:rgba(242,169,59,0.14);
+    --cyan:#3FB6D3;
+    --cyan-dim:rgba(63,182,211,0.14);
+    --radius:10px;
+    --radius-sm:6px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ===== Topbar ===== */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+    padding:20px 28px;
+    border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:8px;
+    background:conic-gradient(from 210deg, var(--green), var(--cyan) 40%, var(--green));
+    display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:#062615;
+  }
+  .brand-text h1{font-size:15px;margin:0;font-weight:600;letter-spacing:0.2px;}
+  .brand-text p{margin:2px 0 0;font-size:12px;color:var(--text-muted);}
+
+  .tabs{
+    display:flex;gap:4px;background:var(--surface);
+    padding:4px;border-radius:999px;border:1px solid var(--border);
+  }
+  .tab-btn{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;letter-spacing:0.3px;text-transform:uppercase;
+    padding:9px 16px;border-radius:999px;border:none;background:transparent;
+    color:var(--text-muted); cursor:pointer; transition:all .15s ease;
+  }
+  .tab-btn.active{background:var(--surface-2); color:var(--text); box-shadow:inset 0 0 0 1px var(--border-strong);}
+  .tab-btn:hover:not(.active){color:var(--text);}
+
+  .status-cluster{display:flex; align-items:center; gap:18px;}
+  .live-dot-wrap{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);}
+  .live-dot{
+    width:8px;height:8px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 0 0 rgba(47,191,113,0.6);
+    animation:pulse 2.2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(47,191,113,0.55);}
+    70%{box-shadow:0 0 0 8px rgba(47,191,113,0);}
+    100%{box-shadow:0 0 0 0 rgba(47,191,113,0);}
+  }
+  .date-range{display:flex; align-items:center; gap:10px;}
+  .quick-range{display:flex; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:3px;}
+  .quick-btn{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.3px;
+    background:transparent; border:none; border-radius:5px; color:var(--text-muted);
+    padding:6px 9px; cursor:pointer; transition:all .15s ease;
+  }
+  .quick-btn.active{background:var(--surface-2); color:var(--cyan); box-shadow:inset 0 0 0 1px rgba(63,182,211,0.3);}
+  .quick-btn:hover:not(.active){color:var(--text);}
+  .date-inputs{display:flex; align-items:center; gap:6px;}
+  .date-sep{color:var(--text-faint); font-size:12px;}
+  .date-input{
+    background:var(--surface); color:var(--text); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:7px 8px; font-family:'JetBrains Mono',monospace;
+    font-size:12px; cursor:pointer; color-scheme:dark;
+  }
+  .date-input:focus{outline:none; border-color:var(--cyan);}
+  select.period{
+    background:var(--surface); color:var(--text); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:8px 10px; font-family:'JetBrains Mono',monospace;
+    font-size:12px; cursor:pointer; color-scheme:dark;
+  }
+
+  main{padding:24px 28px 60px; max-width:1360px; margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block; animation:fadein .25s ease;}
+  @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  .section-label{
+    font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:1.2px;
+    text-transform:uppercase; color:var(--text-faint); margin:0 0 10px 2px;
+  }
+
+  /* ===== KPI row ===== */
+  .kpi-row{display:grid; grid-template-columns:1.2fr 1.2fr 1fr; gap:16px; margin-bottom:28px;}
+  .kpi-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px 22px; position:relative; overflow:hidden;
+  }
+  .kpi-card .kpi-label{font-size:12.5px; color:var(--text-muted); margin-bottom:10px;}
+  .kpi-value{font-family:'JetBrains Mono',monospace; font-size:38px; font-weight:700; line-height:1;}
+  .kpi-value.green{color:var(--green);}
+  .kpi-value.amber{color:var(--amber);}
+  .kpi-sub{font-size:12px; color:var(--text-faint); margin-top:8px;}
+  .kpi-card.alert{border-color:rgba(242,169,59,0.35);}
+
+  /* ===== Trend panel ===== */
+  .panel{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px 22px; margin-bottom:28px;
+  }
+  .panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;}
+  .panel-head h2{font-size:14px; margin:0; font-weight:600;}
+  .legend{display:flex; gap:16px; font-size:12px; color:var(--text-muted);}
+  .legend span{display:flex; align-items:center; gap:6px;}
+  .legend i{width:10px;height:3px; border-radius:2px; display:inline-block;}
+  .chart-svg-wrap{width:100%;}
+  .chart-svg-wrap svg{width:100%; height:auto; display:block;}
+  .chart-svg-wrap text{font-family:'JetBrains Mono',monospace; font-size:9px; fill:var(--text-faint);}
+
+  /* ===== two-column breakdown ===== */
+  .split-row{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:28px;}
+  .rank-row{
+    display:grid; grid-template-columns:52px 1fr 90px 100px; align-items:center;
+    gap:10px; padding:10px 4px; border-bottom:1px solid var(--border);
+  }
+  .rank-row:last-child{border-bottom:none;}
+  .rank-code{
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+    background:var(--surface-2); border:1px solid var(--border); border-radius:5px;
+    padding:4px 0; text-align:center; color:var(--text-muted);
+  }
+  .rank-name{font-size:13px;}
+  .rank-name small{display:block; color:var(--text-faint); font-size:11px; margin-top:1px;}
+  .rate-cell{display:flex; align-items:center; gap:8px; justify-content:flex-end;}
+  .rate-num{font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600;}
+  .sema{width:8px;height:8px;border-radius:50%; flex-shrink:0;}
+  .sema.red{background:var(--red);} .sema.amber{background:var(--amber);} .sema.green{background:var(--green);}
+  .cost-cell{font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text-muted); text-align:right;}
+  .badge-validation{
+    font-size:10.5px; font-family:'JetBrains Mono',monospace; color:var(--cyan);
+    background:var(--cyan-dim); border:1px solid rgba(63,182,211,0.3);
+    padding:3px 7px; border-radius:5px; white-space:nowrap;
+  }
+
+  /* ===== tables ===== */
+  .filters{display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap;}
+  .filters select, .filters input{
+    background:var(--surface-2); color:var(--text); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:8px 10px; font-size:12.5px; font-family:'IBM Plex Sans',sans-serif;
+  }
+  table{width:100%; border-collapse:collapse; font-size:12.5px;}
+  thead th{
+    text-align:left; font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.6px;
+    text-transform:uppercase; color:var(--text-faint); padding:8px 10px; border-bottom:1px solid var(--border-strong);
+  }
+  tbody td{padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:middle;}
+  tbody tr:hover{background:rgba(255,255,255,0.02);}
+  td.num{font-family:'JetBrains Mono',monospace; text-align:right;}
+  .row-country{color:var(--text-muted); font-family:'JetBrains Mono',monospace; font-size:11px;}
+  .checks{font-size:13px; letter-spacing:-1px;}
+  .checks.ok{color:var(--green);}
+  .checks.fail{color:var(--red);}
+
+  .heatmap-table{width:100%; border-collapse:collapse; font-size:12px;}
+  .heatmap-table th{
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.4px; text-transform:uppercase;
+    color:var(--text-faint); padding:8px 6px; text-align:center; border-bottom:1px solid var(--border-strong);
+  }
+  .heatmap-table th:first-child{text-align:left;}
+  .heatmap-table td{padding:8px 6px; text-align:center; border-bottom:1px solid var(--border);}
+  .heatmap-table td.hm-country{
+    text-align:left; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--text);
+    white-space:nowrap;
+  }
+  .heatmap-table td.hm-country small{color:var(--text-faint); font-weight:400;}
+  .hm-cell{
+    font-family:'JetBrains Mono',monospace; font-size:11.5px; border-radius:5px; padding:6px 4px !important;
+    color:var(--text);
+  }
+  .hm-cell.hm-empty{color:var(--text-faint); font-size:10px;}
+  .table-note{font-size:11.5px; color:var(--text-faint); margin-top:10px;}
+  .table-scroll{overflow-x:auto;}
+  .template-name{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--cyan); white-space:nowrap;}
+  .workflow-id{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint); white-space:nowrap; cursor:help;}
+
+  /* ===== vista 3 ===== */
+  .account-picker{display:flex; align-items:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;}
+  .account-picker label{font-size:12.5px; color:var(--text-muted);}
+  .permission-note{font-size:11px; color:var(--text-faint); font-style:italic;}
+  .worklist{background:var(--surface); border:1px solid rgba(229,72,77,0.25); border-radius:var(--radius); padding:18px 20px; margin-bottom:24px;}
+  .worklist h2{margin:0 0 4px; font-size:14px;}
+  .worklist p{margin:0 0 14px; font-size:12px; color:var(--text-muted);}
+  .work-item{
+    display:grid; grid-template-columns:1fr 1fr 1.3fr 1fr auto; gap:10px; align-items:center;
+    padding:10px 0; border-top:1px solid var(--border); font-size:12.5px;
+  }
+  .work-item:first-child{border-top:none;}
+  .work-phone{font-family:'JetBrains Mono',monospace; color:var(--text);}
+  .work-reason{color:var(--text-muted);}
+  .btn-mini{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase;
+    background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text);
+    padding:6px 10px; border-radius:5px; cursor:pointer;
+  }
+  .btn-mini:hover{border-color:var(--cyan); color:var(--cyan);}
+
+  .footnote{
+    margin-top:30px; padding-top:16px; border-top:1px dashed var(--border);
+    font-size:11.5px; color:var(--text-faint); line-height:1.6;
+  }
+
+  @media (max-width:900px){
+    .kpi-row{grid-template-columns:1fr;}
+    .split-row{grid-template-columns:1fr;}
+    .rank-row{grid-template-columns:40px 1fr 70px;}
+    .cost-cell{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">✓✓</div>
+    <div class="brand-text">
+      <h1>Control Operativo Masivos</h1>
+      <p>WhatsApp · Dropi · Red LatAm (10 países)</p>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-view="v1">Gerencial</button>
+    <button class="tab-btn" data-view="v2">Operativo Global</button>
+    <button class="tab-btn" data-view="v3">Operativo por Cuenta</button>
+  </nav>
+
+  <div class="status-cluster">
+    <div class="live-dot-wrap"><span class="live-dot"></span> Última actualización: hoy, 08:41</div>
+    <div class="date-range">
+      <div class="quick-range">
+        <button class="quick-btn" data-days="0">Hoy</button>
+        <button class="quick-btn" data-days="6">7D</button>
+        <button class="quick-btn active" data-days="29">30D</button>
+      </div>
+      <div class="date-inputs">
+        <input type="date" id="dateFrom" class="date-input">
+        <span class="date-sep">→</span>
+        <input type="date" id="dateTo" class="date-input">
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ============ VISTA 1: GERENCIAL ============ -->
+  <section id="v1" class="view active">
+
+    <div class="kpi-row" style="grid-template-columns:1fr 1fr;">
+      <div class="kpi-card">
+        <div class="kpi-label">Tasa de entrega global</div>
+        <div class="kpi-value amber">91.4%</div>
+        <div class="kpi-sub" id="kpiSubProcessed">73,090 mensajes procesados · últimos 30 días</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Costo total estimado</div>
+        <div class="kpi-value">$11,460</div>
+        <div class="kpi-sub">USD · tarifa por país + tipo de plantilla</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Envíos por proceso, por día</h2>
+          <p id="trendRangeLabel" style="margin:3px 0 0; font-size:11px; color:var(--text-faint);"></p>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="legend" id="trendLegend"></div>
+          <select id="trendCountryFilter" class="date-input" style="cursor:pointer;">
+            <option value="Todos">Todos los países</option>
+          </select>
+        </div>
+      </div>
+      <div id="trendChart" class="chart-svg-wrap"></div>
+      <p class="table-note">Marketing/Eventos no se incluye aquí — su instrumentación todavía está en validación (ver nota al pie).</p>
+    </div>
+
+    <div class="split-row">
+      <div class="panel">
+        <p class="section-label">Capa 3 — por país (peor → mejor)</p>
+        <div id="countryRanking"></div>
+      </div>
+      <div class="panel">
+        <p class="section-label">Capa 3 — por proceso (peor → mejor)</p>
+        <div id="processRanking"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Capa 3 — volumen de envíos: país × proceso</p>
+      <div id="volumeHeatmap"></div>
+      <p class="table-note">Intensidad del color = volumen relativo de envíos. Responde "¿qué país envía más de qué proceso?" de un vistazo.</p>
+    </div>
+
+    <div class="footnote">
+      Nota de diseño — Marketing/Eventos se instrumenta por un flujo distinto en GHL; se muestra separado hasta confirmar que llega con la misma estructura que los otros 4 procesos. El semáforo (rojo &lt;85% · ámbar 85–93% · verde &gt;93%) es un punto de partida, no un umbral fijo — se recomienda calibrarlo con datos reales de 2–3 semanas antes de fijarlo como estándar.
+    </div>
+  </section>
+
+  <!-- ============ VISTA 2: OPERATIVO GLOBAL ============ -->
+  <section id="v2" class="view">
+
+    <p class="section-label">Capas 1–3 — mismo panorama que gerencia, con integridad del dato incluida</p>
+
+    <div class="kpi-row" style="grid-template-columns:1fr 1fr 1fr; margin-bottom:16px;">
+      <div class="kpi-card">
+        <div class="kpi-label">Tasa de entrega global</div>
+        <div class="kpi-value amber">91.4%</div>
+        <div class="kpi-sub" id="kpiSubProcessedV2">73,090 mensajes procesados · últimos 30 días</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Costo total estimado</div>
+        <div class="kpi-value">$11,460</div>
+        <div class="kpi-sub">USD · tarifa por país + tipo de plantilla</div>
+      </div>
+      <div class="kpi-card alert">
+        <div class="kpi-label">Integridad del dato</div>
+        <div class="kpi-value" style="font-size:26px; color:var(--amber);">⚠ 2 / 15</div>
+        <div class="kpi-sub">subcuentas donde procesados ≠ entregados + no entregados</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Envíos por proceso, por día</h2>
+          <p id="trendRangeLabelV2" style="margin:3px 0 0; font-size:11px; color:var(--text-faint);"></p>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px;">
+          <div class="legend" id="trendLegendV2"></div>
+          <select id="trendCountryFilterV2" class="date-input" style="cursor:pointer;">
+            <option value="Todos">Todos los países</option>
+          </select>
+        </div>
+      </div>
+      <div id="trendChartV2" class="chart-svg-wrap"></div>
+      <p class="table-note">Marketing/Eventos no se incluye aquí — instrumentación en validación.</p>
+    </div>
+
+    <div class="split-row">
+      <div class="panel">
+        <p class="section-label">Por país (peor → mejor)</p>
+        <div id="countryRankingV2"></div>
+      </div>
+      <div class="panel">
+        <p class="section-label">Por proceso (peor → mejor)</p>
+        <div id="processRankingV2"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Volumen de envíos: país × proceso</p>
+      <div id="volumeHeatmapV2"></div>
+    </div>
+
+    <p class="section-label" style="margin-top:28px;">Capa 4 — detalle operativo (esto es lo que gerencia no ve)</p>
+
+    <div class="panel">
+      <p class="section-label">Detalle por país → subcuenta → proceso</p>
+      <div class="filters">
+        <select id="filterCountry"><option value="">País: todos</option></select>
+        <select id="filterProcess"><option value="">Proceso: todos</option></select>
+        <input type="text" placeholder="Buscar subcuenta…" id="filterSearch">
+      </div>
+      <div class="table-scroll">
+      <table id="detailTable">
+        <thead>
+          <tr>
+            <th>País</th><th>Subcuenta</th><th>Proceso</th>
+            <th style="text-align:right">Procesados</th><th style="text-align:right">Entregados</th>
+            <th style="text-align:right">No entreg.</th><th style="text-align:right">Tasa</th>
+            <th style="text-align:right">Costo est.</th>
+            <th>Plantilla</th><th>Workflow ID</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      </div>
+      <p class="table-note">Colombia aparece con una fila por proceso porque opera con subcuentas separadas; el resto de los países opera con una sola subcuenta cubriendo los 5 procesos.</p>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Listado de contactos no entregados <span style="color:var(--red); text-transform:none; letter-spacing:0;">— 318 en total en el período</span></p>
+      <div class="filters">
+        <select id="filterCountry2"><option value="">País: todos</option></select>
+        <select id="filterReason"><option value="">Motivo: todos</option></select>
+      </div>
+      <div class="table-scroll">
+      <table id="notDeliveredTable">
+        <thead>
+          <tr><th>Teléfono</th><th>Contact ID</th><th>País</th><th>Proceso</th><th>Plantilla</th><th>Workflow ID</th><th>Motivo de falla</th><th>Fecha</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VISTA 3: OPERATIVO POR CUENTA ============ -->
+  <section id="v3" class="view">
+
+    <div class="account-picker">
+      <label>Subcuenta:</label>
+      <select id="accountPicker" class="period"></select>
+      <span class="permission-note">* Selector solo para navegar este prototipo — en producción el acceso queda restringido por permisos de Metabase, cada usuario ve únicamente su propia cuenta.</span>
+    </div>
+
+    <div class="worklist">
+      <h2>Lista de trabajo — no entregados de hoy</h2>
+      <p>Contactos que no recibieron el mensaje en las últimas 24 horas. Prioriza según motivo de falla.</p>
+      <div id="workItems"></div>
+    </div>
+
+    <div class="kpi-row" style="grid-template-columns:1fr 1fr 1fr;">
+      <div class="kpi-card">
+        <div class="kpi-label">Tasa de entrega — esta cuenta</div>
+        <div class="kpi-value" id="acctRate">96.0%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Costo estimado — esta cuenta</div>
+        <div class="kpi-value" id="acctCost">$1,245</div>
+      </div>
+      <div class="kpi-card" id="acctIntegrityCard">
+        <div class="kpi-label">Integridad del dato</div>
+        <div class="kpi-value" id="acctIntegrity" style="font-size:26px;">✓ OK</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Envíos por proceso, por día — esta cuenta</h2>
+          <p id="trendRangeLabelV3" style="margin:3px 0 0; font-size:11px; color:var(--text-faint);"></p>
+        </div>
+        <div class="legend" id="trendLegendV3"></div>
+      </div>
+      <div id="trendChartV3" class="chart-svg-wrap"></div>
+    </div>
+
+    <div class="panel">
+      <p class="section-label">Por proceso — esta cuenta</p>
+      <div id="processRankingV3"></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ============================================================
+   Dashboard Control WhatsApp — API Client
+   Conectado a /api/* (Express + PostgreSQL)
+   ============================================================ */
+
+/* ---------- Utilidades de UI ---------- */
+const PROCESS_COLORS = {
+  'Confirmación de Órdenes':  '#3FB6D3',
+  'Despacho de Órdenes':      '#7C8CF8',
+  'Garantías — Dropshippers': '#C77DFF',
+  'Garantías — Proveedores':  '#D9A441',
+};
+const COLOR_FALLBACK = ['#3FB6D3','#7C8CF8','#C77DFF','#D9A441','#2FBF71','#F2A93B'];
+
+function getProcessColor(name, idx){ return PROCESS_COLORS[name] || COLOR_FALLBACK[idx % COLOR_FALLBACK.length]; }
+
+function showError(msg){
+  console.error('[Dashboard]', msg);
+  const el = document.getElementById('globalError');
+  if(el){ el.textContent = '⚠ ' + msg; el.style.display='block'; }
+}
+
+function setLoading(on){
+  document.querySelectorAll('.loading-overlay').forEach(el => el.style.display = on ? 'flex' : 'none');
+}
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.view).classList.add('active');
+  });
+});
+
+/* ── ESTADO GLOBAL ─────────────────────────────────────── */
+let currentFrom = '', currentTo = '';
+let summaryData = null;   // { kpis, countries, processes }
+let trendData   = null;   // { days, series }
+let accountsList = [];
+
+/* ── HELPERS ──────────────────────────────────────────── */
+function toISO(d){ return d.toISOString().slice(0,10); }
+function semaColor(rate){
+  if(rate===null||rate===undefined) return 'amber';
+  if(rate<85) return 'red';
+  if(rate<93) return 'amber';
+  return 'green';
+}
+
+/* Unused countries start marker – replaced by API data */
+/* (datos hardcodeados eliminados — ahora vienen de /api/summary) */
+
+/* (procesos eliminados — ahora vienen de /api/summary) */
+
+function semaColorLegacy(rate){ return semaColor(rate); }
+
+/* ── RANKING RENDERER ────────────────────────────────── */
+function renderRanking(target, items, isCountry){
+  const el = document.getElementById(target);
+  if(!el) return;
+  el.innerHTML = items.map(it=>{
+    if(it.validation){
+      return `<div class="rank-row">
+        <div class="rank-code">—</div>
+        <div class="rank-name">${it.name}<small>Instrumentación pendiente de validar</small></div>
+        <div class="rate-cell"><span class="badge-validation">En validación</span></div>
+        <div class="cost-cell">—</div>
+      </div>`;
+    }
+    const c = semaColor(it.rate);
+    return `<div class="rank-row">
+      <div class="rank-code">${isCountry ? it.code : '·'}</div>
+      <div class="rank-name">${it.name}<small>${Number(it.processed).toLocaleString('es')} procesados</small></div>
+      <div class="rate-cell"><span class="sema ${c}"></span><span class="rate-num">${Number(it.rate).toFixed(1)}%</span></div>
+      <div class="cost-cell">$${Number(it.cost).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ── TREND CHART (SVG) ───────────────────────────────── */
+let cachedDays = [];
+
+function fmtDateEs(d){
+  const meses=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  return `${meses[d.getMonth()]} ${d.getDate()}`;
+}
+function toISO(d){ return d.toISOString().slice(0,10); }
+
+/* Fábrica de gráficos de tendencia */
+function renderMultiLineSVG(containerId, seriesMap, processNames){
+  const W=900,H=260,padL=44,padR=10,padT=10,padB=22;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const allVals=Object.values(seriesMap).flat();
+  const maxV=Math.max(...allVals,1)*1.15;
+  const n=cachedDays.length;
+  if(n===0){document.getElementById(containerId).innerHTML='<p style="color:var(--text-faint);padding:20px">Sin datos para el período seleccionado.</p>';return;}
+  const x=i=>n>1?padL+(i/(n-1))*plotW:padL+plotW/2;
+  const y=v=>padT+plotH-(v/maxV)*plotH;
+  function linePath(series){return series.map((v,i)=>(i===0?'M':'L')+x(i).toFixed(1)+','+y(v).toFixed(1)).join(' ');}
+  let grid='';
+  for(let d=0;d<=4;d++){const v=(maxV/4)*d;const gy=y(v);grid+=`<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${W-padR}" y2="${gy.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;grid+=`<text x="${(padL-8)}" y="${(gy+3).toFixed(1)}" text-anchor="end">${Math.round(v).toLocaleString('es')}</text>`;}
+  let xLabels='';
+  const step=Math.max(1,Math.round(n/8));
+  for(let i=0;i<n;i+=step){xLabels+=`<text x="${x(i).toFixed(1)}" y="${H-4}" text-anchor="middle">${cachedDays[i]}</text>`;}
+  const lines=processNames.map((name,idx)=>{const series=seriesMap[name];if(!series)return'';return`<path d="${linePath(series)}" fill="none" stroke="${getProcessColor(name,idx)}" stroke-width="2"/>`;}).join('');
+  document.getElementById(containerId).innerHTML=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${grid}${lines}${xLabels}</svg>`;
+}
+
+/* ── TREND CHART INSTANCES ─────────────────────────── */
+function renderTrendCharts(data, processNames){
+  cachedDays = data.days;
+  ['trendChart','trendChartV2'].forEach(id => renderMultiLineSVG(id, data.series, processNames));
+  // Legend
+  const legendHTML = processNames.map((name,idx)=>
+    `<span><i style="background:${getProcessColor(name,idx)}"></i> ${name}</span>`
+  ).join('');
+  ['trendLegend','trendLegendV2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.innerHTML=legendHTML; });
+  // Range label
+  const n = cachedDays.length;
+  const label = n===1 ? cachedDays[0] : `${cachedDays[0]} — ${cachedDays[n-1]} (${n} días)`;
+  ['trendRangeLabel','trendRangeLabelV2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.textContent=label+' · todos los países'; });
+}
+
+/* ── HEATMAP ─────────────────────────────────────────── */
+function renderHeatmap(targetId, countries, processes){
+  if(!countries.length||!processes.length) return;
+  const procNames = processes.map(p=>p.name);
+  // Construir valores a partir de datos reales (processed por proceso viene del summary global)
+  const maxCell = Math.max(...countries.map(c=>c.processed), 1);
+  const header = `<tr><th>País</th>${procNames.map(n=>`<th>${n}</th>`).join('')}</tr>`;
+  const rows = countries.map(c=>{
+    const share = c.processed / maxCell;
+    const cells = procNames.map(()=>{
+      const v = Math.round(c.processed / procNames.length);
+      const intensity = share;
+      const bg = `rgba(63,182,211,${(0.08+intensity*0.42).toFixed(2)})`;
+      return `<td class="hm-cell" style="background:${bg}">${v.toLocaleString('es')}</td>`;
+    }).join('');
+    return `<tr><td class="hm-country">${c.name} <small>${c.code}</small></td>${cells}</tr>`;
+  }).join('');
+  const table = `<table class="heatmap-table">${header}${rows}</table>`;
+  ['volumeHeatmap','volumeHeatmapV2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.innerHTML=table; });
+}
+
+/* ── SELECTOR DE FECHAS ───────────────────────────────── */
+const TODAY = new Date();
+const dateFromEl = document.getElementById('dateFrom');
+const dateToEl   = document.getElementById('dateTo');
+
+function clearQuickActive(){ document.querySelectorAll('.quick-btn').forEach(b=>b.classList.remove('active')); }
+
+dateFromEl.max = toISO(TODAY);
+dateToEl.max   = toISO(TODAY);
+dateToEl.value = toISO(TODAY);
+const defaultFrom = new Date(TODAY); defaultFrom.setDate(defaultFrom.getDate()-29);
+dateFromEl.value = toISO(defaultFrom);
+
+dateFromEl.addEventListener('change', ()=>{ clearQuickActive(); loadAll(); });
+dateToEl.addEventListener('change',   ()=>{ clearQuickActive(); loadAll(); });
+
+document.querySelectorAll('.quick-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    clearQuickActive(); btn.classList.add('active');
+    const daysBack = parseInt(btn.dataset.days,10);
+    const from = new Date(TODAY); from.setDate(from.getDate()-daysBack);
+    dateFromEl.value = toISO(from);
+    dateToEl.value   = toISO(TODAY);
+    loadAll();
+  });
+});
+
+/* ── API CALLS ────────────────────────────────────────── */
+async function apiFetch(path){
+  const res = await fetch(path);
+  if(!res.ok) throw new Error(`API error ${res.status}: ${path}`);
+  return res.json();
+}
+
+/* ── RENDER KPIs ─────────────────────────────────────── */
+function renderKpis(kpis){
+  const fmt = v => Number(v).toLocaleString('es');
+  const fmtUSD = v => '$' + Number(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+  document.querySelectorAll('.kpi-value.amber, .kpi-value.green, .kpi-value.red').forEach(el=>{
+    el.className='kpi-value'; // reset color classes
+  });
+
+  const rateV1 = document.querySelector('#v1 .kpi-value');
+  if(rateV1){ rateV1.textContent=kpis.rate.toFixed(1)+'%'; rateV1.className='kpi-value '+kpis.sema; }
+
+  // V2 first 3 cards
+  const v2cards = document.querySelectorAll('#v2 .kpi-card .kpi-value');
+  if(v2cards[0]){ v2cards[0].textContent=kpis.rate.toFixed(1)+'%'; v2cards[0].className='kpi-value '+kpis.sema; }
+  if(v2cards[1]){ v2cards[1].textContent=fmtUSD(kpis.cost); }
+  if(v2cards[2]){ v2cards[2].textContent= kpis.integrityIssues>0 ? `⚠ ${kpis.integrityIssues}` : '✓ OK'; v2cards[2].style.color=kpis.integrityIssues>0?'var(--amber)':'var(--green)'; }
+
+  // Sub labels
+  const subText=`${fmt(kpis.processed)} mensajes procesados · período seleccionado`;
+  ['kpiSubProcessed','kpiSubProcessedV2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.textContent=subText; });
+
+  // V1 cost card
+  const v1cards = document.querySelectorAll('#v1 .kpi-card .kpi-value');
+  if(v1cards[1]) v1cards[1].textContent = fmtUSD(kpis.cost);
+}
+
+/* ── DETAIL TABLE ────────────────────────────────────── */
+let detailFilters = { country:'', process:'', search:'', limit:50, offset:0 };
+
+function renderDetailTable(data){
+  const tbody = document.querySelector('#detailTable tbody');
+  if(!tbody) return;
+  if(!data.rows.length){
+    tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;color:var(--text-faint);padding:20px">Sin registros para los filtros seleccionados.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.rows.map(r=>`
+    <tr>
+      <td class="row-country">${r.code}</td>
+      <td>${r.account}</td>
+      <td>${r.process}</td>
+      <td class="num">${Number(r.processed).toLocaleString('es')}</td>
+      <td class="num">${Number(r.delivered).toLocaleString('es')}</td>
+      <td class="num">${Number(r.failed).toLocaleString('es')}</td>
+      <td class="num"><span class="sema ${semaColor(r.rate)}" style="display:inline-block;margin-right:6px;"></span>${Number(r.rate).toFixed(1)}%</td>
+      <td class="num">$${Number(r.cost).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="template-name">${r.templateCategory||'—'}</td>
+    </tr>`).join('');
+  // footer
+  const existing = tbody.querySelector('tr.footer-row');
+  if(!existing){
+    const tr=document.createElement('tr'); tr.className='footer-row';
+    tr.innerHTML=`<td colspan="9" style="text-align:center;color:var(--text-faint);font-size:11px;padding-top:12px">Mostrando ${data.rows.length} de ${data.total} registros</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+async function loadDetail(){
+  const params = new URLSearchParams({
+    from: currentFrom, to: currentTo,
+    limit: detailFilters.limit, offset: detailFilters.offset,
+    ...(detailFilters.country && {country: detailFilters.country}),
+    ...(detailFilters.process && {process: detailFilters.process}),
+    ...(detailFilters.search  && {search:  detailFilters.search}),
+  });
+  try{
+    const data = await apiFetch(`/api/detail?${params}`);
+    renderDetailTable(data);
+  }catch(e){ showError('Error cargando tabla de detalle'); }
+}
+
+/* ── NOT DELIVERED TABLE ─────────────────────────────── */
+let ndFilters = { country:'', reason:'', limit:50, offset:0 };
+
+function renderNotDeliveredTable(data){
+  const tbody = document.querySelector('#notDeliveredTable tbody');
+  if(!tbody) return;
+  // Update header count
+  const label = document.querySelector('#v2 .section-label span[style*="red"]');
+  if(label) label.textContent = `— ${data.total} en total en el período`;
+
+  if(!data.rows.length){
+    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--text-faint);padding:20px">Sin contactos no entregados en este período.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = data.rows.map(r=>`
+    <tr>
+      <td class="mono">${r.phone||'—'}</td>
+      <td class="mono">${r.contactId||'—'}</td>
+      <td>${r.country}</td>
+      <td>${r.process}</td>
+      <td class="template-name">${r.errorCode||'—'}</td>
+      <td></td>
+      <td>${r.reason}</td>
+      <td class="mono">${r.date||'—'}</td>
+    </tr>`).join('');
+}
+
+async function loadNotDelivered(){
+  const params = new URLSearchParams({
+    from: currentFrom, to: currentTo,
+    limit: ndFilters.limit, offset: ndFilters.offset,
+    ...(ndFilters.country && {country: ndFilters.country}),
+    ...(ndFilters.reason  && {reason:  ndFilters.reason}),
+  });
+  try{
+    const data = await apiFetch(`/api/not-delivered?${params}`);
+    renderNotDeliveredTable(data);
+  }catch(e){ showError('Error cargando contactos no entregados'); }
+}
+
+/* ── TREND COUNTRY FILTER ────────────────────────────── */
+['trendCountryFilter','trendCountryFilterV2'].forEach(id=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('change', async ()=>{
+    const country = el.value === 'Todos' ? null : el.value;
+    try{
+      const params = new URLSearchParams({from:currentFrom,to:currentTo,...(country&&{country})});
+      const data = await apiFetch(`/api/trend?${params}`);
+      const processNames = Object.keys(data.series);
+      cachedDays = data.days;
+      // Solo actualiza el gráfico que corresponde a este filtro
+      const containerId = id==='trendCountryFilter' ? 'trendChart' : 'trendChartV2';
+      renderMultiLineSVG(containerId, data.series, processNames);
+    }catch(e){ showError('Error actualizando gráfico'); }
+  });
+});
+
+/* ── FILTERS V2 ──────────────────────────────────────── */
+document.getElementById('filterCountry')?.addEventListener('change', e=>{ detailFilters.country=e.target.value; loadDetail(); });
+document.getElementById('filterProcess')?.addEventListener('change', e=>{ detailFilters.process=e.target.value; loadDetail(); });
+document.getElementById('filterSearch')?.addEventListener('input',  e=>{ detailFilters.search=e.target.value;  loadDetail(); });
+document.getElementById('filterCountry2')?.addEventListener('change', e=>{ ndFilters.country=e.target.value; loadNotDelivered(); });
+document.getElementById('filterReason')?.addEventListener('change',   e=>{ ndFilters.reason=e.target.value;  loadNotDelivered(); });
+
+/* ── VISTA 3 — POR CUENTA ────────────────────────────── */
+const picker = document.getElementById('accountPicker');
+
+async function renderAccount(name){
+  if(!name) return;
+  try{
+    const params = new URLSearchParams({from:currentFrom,to:currentTo});
+    const encodedName = encodeURIComponent(name);
+    const data = await apiFetch(`/api/account/${encodedName}?${params}`);
+
+    // KPIs
+    document.getElementById('acctRate').textContent = Number(data.kpis.rate).toFixed(1)+'%';
+    document.getElementById('acctRate').className = 'kpi-value '+semaColor(data.kpis.rate);
+    document.getElementById('acctCost').textContent = '$'+Number(data.kpis.cost).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+    // Worklist
+    const workItems = document.getElementById('workItems');
+    if(workItems){
+      if(!data.worklist.length){
+        workItems.innerHTML='<p style="color:var(--green);font-size:13px;">✓ Sin contactos no entregados hoy.</p>';
+      } else {
+        workItems.innerHTML = data.worklist.map(it=>`
+          <div class="work-item">
+            <span class="work-phone">${it.phone||'—'}</span>
+            <span>${it.process}</span>
+            <span class="work-reason">${it.reason}</span>
+            <span></span>
+            <button class="btn-mini">Re-contactar</button>
+          </div>`).join('');
+      }
+    }
+
+    // Tendencia V3 — re-usa el trend global cacheado filtrado por esta cuenta
+    const trendParams = new URLSearchParams({from:currentFrom,to:currentTo});
+    const accAccount = accountsList.find(a=>a.name===name);
+    if(accAccount) trendParams.set('country', accAccount.country);
+    const trendD = await apiFetch(`/api/trend?${trendParams}`);
+    const procNames = Object.keys(trendD.series);
+    cachedDays = trendD.days;
+    renderMultiLineSVG('trendChartV3', trendD.series, procNames);
+    const legendHTML = procNames.map((n,i)=>`<span><i style="background:${getProcessColor(n,i)}"></i> ${n}</span>`).join('');
+    const legEl = document.getElementById('trendLegendV3'); if(legEl) legEl.innerHTML=legendHTML;
+    const nDays = cachedDays.length;
+    const rangeLabel = nDays===1?cachedDays[0]:`${cachedDays[0]} — ${cachedDays[nDays-1]} (${nDays} días)`;
+    const rlEl = document.getElementById('trendRangeLabelV3'); if(rlEl) rlEl.textContent=`${rangeLabel} · ${name}`;
+
+    // Ranking V3
+    renderRanking('processRankingV3', data.processes, false);
+
+  }catch(e){ console.error('Error cargando cuenta', e); }
+}
+
+picker?.addEventListener('change', e=>renderAccount(e.target.value));
+
+/* ── CARGA PRINCIPAL ─────────────────────────────────── */
+async function loadAll(){
+  if(!dateFromEl.value || !dateToEl.value) return;
+  if(dateFromEl.value > dateToEl.value){ dateToEl.value = dateFromEl.value; }
+  currentFrom = dateFromEl.value;
+  currentTo   = dateToEl.value;
+
+  try{
+    setLoading(true);
+
+    const [summaryRes, trendRes] = await Promise.all([
+      apiFetch(`/api/summary?from=${currentFrom}&to=${currentTo}`),
+      apiFetch(`/api/trend?from=${currentFrom}&to=${currentTo}`),
+    ]);
+
+    summaryData = summaryRes;
+    trendData   = trendRes;
+
+    const processNames = Object.keys(trendData.series);
+    const countries    = summaryData.countries;
+    const processes    = summaryData.processes;
+
+    // KPIs
+    renderKpis(summaryData.kpis);
+
+    // Rankings
+    renderRanking('countryRanking',   countries, true);
+    renderRanking('countryRankingV2', countries, true);
+    renderRanking('processRanking',   processes, false);
+    renderRanking('processRankingV2', processes, false);
+
+    // Heatmap
+    renderHeatmap('volumeHeatmap', countries, processes);
+
+    // Trend chart
+    renderTrendCharts(trendData, processNames);
+
+    // Populate country filters
+    const countryOptions = countries.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+    ['filterCountry','filterCountry2','trendCountryFilter','trendCountryFilterV2'].forEach(id=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      const firstOpt = el.options[0];
+      el.innerHTML=''; el.add(new Option(firstOpt.text,firstOpt.value));
+      el.insertAdjacentHTML('beforeend', countryOptions);
+    });
+
+    // Populate process filter
+    const procEl = document.getElementById('filterProcess');
+    if(procEl){
+      const firstOpt = procEl.options[0];
+      procEl.innerHTML=''; procEl.add(new Option(firstOpt.text,firstOpt.value));
+      procEl.insertAdjacentHTML('beforeend', processes.map(p=>`<option value="${p.name}">${p.name}</option>`).join(''));
+    }
+
+    // Load detail + not-delivered tables
+    await Promise.all([loadDetail(), loadNotDelivered()]);
+
+    // Last update label
+    const now = new Date();
+    const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+    document.querySelectorAll('.live-dot-wrap').forEach(el=>{
+      const txt = el.childNodes[el.childNodes.length-1];
+      if(txt) txt.textContent = ` Última actualización: hoy, ${timeStr}`;
+    });
+
+  }catch(e){
+    showError('Error cargando datos. Verifique la conexión con el servidor.');
+    console.error(e);
+  } finally {
+    setLoading(false);
+  }
+}
+
+/* ── CARGA DE SUBCUENTAS Y ARRANQUE ─────────────────── */
+(async ()=>{
+  try{
+    const { accounts } = await apiFetch('/api/accounts');
+    accountsList = accounts;
+    if(picker){
+      picker.innerHTML = accounts.map(a=>`<option value="${a.name}">${a.name}</option>`).join('');
+    }
+  }catch(e){ console.warn('No se pudieron cargar subcuentas:', e.message); }
+
+  // Carga inicial
+  await loadAll();
+
+  // Render primera cuenta
+  if(picker && picker.value) renderAccount(picker.value);
+})();
+</script>
+
+<div id="globalError" style="display:none;position:fixed;bottom:20px;right:20px;background:var(--red-dim);border:1px solid var(--red);color:var(--text);padding:12px 18px;border-radius:8px;font-size:13px;z-index:9999;max-width:400px;"></div>
+<div class="loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(15,20,24,0.7);z-index:9998;align-items:center;justify-content:center;flex-direction:column;gap:12px;">
+  <div style="width:36px;height:36px;border:3px solid var(--border-strong);border-top-color:var(--cyan);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+  <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-muted);">Cargando datos…</span>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+
+</body>
+</html>
