@@ -61,7 +61,7 @@ const getByCountry = async (from, to) => {
         CASE WHEN m.entregado = TRUE THEN COALESCE(tw.costo_unitario_usd, 0) ELSE 0 END
       ), 0)                                                                   AS cost
     FROM ${SCHEMA}.fact_mensajes_ghl m
-    INNER JOIN ${SCHEMA}.dim_paises dp ON m.id_pais = dp.id_pais
+    INNER JOIN ${SCHEMA}.paises dp ON m.id_pais = dp.id_pais
     LEFT JOIN ${SCHEMA}.dim_tipo_envio dte ON m.id_tipo_envio = dte.id_tipo_envio
     LEFT JOIN ${SCHEMA}.tarifas_whatsapp tw
       ON m.id_pais = tw.id_pais

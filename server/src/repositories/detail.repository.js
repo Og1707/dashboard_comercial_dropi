@@ -31,7 +31,7 @@ const getDetail = async (from, to, { country, process, search, limit = 20, offse
   const baseFromWhere = `
     FROM ${SCHEMA}.fact_mensajes_ghl m
     INNER JOIN ${SCHEMA}.fact_ordenes_entregadas foe ON m.id_orden = foe.id_orden
-    INNER JOIN ${SCHEMA}.dim_paises dp ON m.id_pais = dp.id_pais
+    INNER JOIN ${SCHEMA}.paises dp ON m.id_pais = dp.id_pais
     INNER JOIN ${SCHEMA}.dim_tipo_envio dte ON m.id_tipo_envio = dte.id_tipo_envio
     LEFT JOIN ${SCHEMA}.dim_subcuentas s ON foe.id_subcuenta = s.id_subcuenta
     LEFT JOIN ${SCHEMA}.tarifas_whatsapp tw

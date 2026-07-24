@@ -23,10 +23,10 @@ pool.on('error', (err) => {
 const testConnection = async () => {
   try {
     const client = await pool.connect();
-    logger.info('✅ Conexión exitosa con PostgreSQL');
+    logger.info(' Conexión exitosa con PostgreSQL');
     client.release();
   } catch (err) {
-    logger.error({ err }, '❌ Error crítico al conectar a la base de datos');
+    logger.error({ err }, ' Error crítico al conectar a la base de datos');
     process.exit(1);
   }
 };
