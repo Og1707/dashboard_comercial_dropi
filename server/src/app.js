@@ -18,6 +18,9 @@ const app = express();
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors());
 
+// Confiar en el proxy de Easypanel para que rate-limit identifique IPs reales
+app.set('trust proxy', 1);
+
 // ── Body parsing ───────────────────────────────────────────────────────────
 app.use(express.json());
 

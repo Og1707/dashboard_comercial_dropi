@@ -79,7 +79,6 @@ const getAccountWorkList = async (subcuentaName) => {
       c.telefono,
       c.ghl_id                          AS contact_id,
       dte.nombre_tipo_envio             AS process,
-      COALESCE(e.workflow_id, 'N/A')     AS workflow_id,
       e.codigo_error,
       e.descripcion_error               AS reason,
       e.fecha_error                     AS date

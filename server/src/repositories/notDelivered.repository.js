@@ -52,8 +52,6 @@ const getNotDelivered = async (from, to, { country, reason, limit = 50, offset =
       dp.nombre_pais                    AS country,
       dp.codigo_iso2                    AS code,
       dte.nombre_tipo_envio             AS process,
-      dte.nombre_template               AS template,
-      COALESCE(e.workflow_id, 'N/A')     AS workflow_id,
       e.codigo_error,
       e.descripcion_error               AS reason,
       e.fecha_error                     AS date
