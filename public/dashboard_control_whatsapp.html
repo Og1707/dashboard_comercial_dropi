@@ -589,7 +589,25 @@ function renderMultiLineSVG(containerId, seriesMap, processNames){
   let xLabels='';
   const step=Math.max(1,Math.round(n/8));
   for(let i=0;i<n;i+=step){xLabels+=`<text x="${x(i).toFixed(1)}" y="${H-4}" text-anchor="middle">${cachedDays[i]}</text>`;}
-  const lines=processNames.map((name,idx)=>{const series=seriesMap[name];if(!series)return'';return`<path d="${linePath(series)}" fill="none" stroke="${getProcessColor(name,idx)}" stroke-width="2"/>`;}).join('');
+
+  // Cuando hay un solo día: renderizar círculos con valor en lugar de líneas
+  let lines='';
+  if(n===1){
+    // Distribuir los puntos horizontalmente de forma equidistante
+    const total=processNames.length;
+    lines=processNames.map((name,idx)=>{
+      const series=seriesMap[name]; if(!series||series[0]===undefined)return'';
+      const v=series[0];
+      const cx=(padL+(idx+1)*(plotW/(total+1))).toFixed(1);
+      const cy=y(v).toFixed(1);
+      const color=getProcessColor(name,idx);
+      return `<circle cx="${cx}" cy="${cy}" r="6" fill="${color}" opacity="0.9"/>
+              <text x="${cx}" y="${(parseFloat(cy)-14).toFixed(1)}" text-anchor="middle" fill="${color}" font-size="11" font-weight="600">${v.toLocaleString('es')}</text>`;
+    }).join('');
+  } else {
+    lines=processNames.map((name,idx)=>{const series=seriesMap[name];if(!series)return'';return`<path d="${linePath(series)}" fill="none" stroke="${getProcessColor(name,idx)}" stroke-width="2"/>`;}).join('');
+  }
+
   document.getElementById(containerId).innerHTML=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${grid}${lines}${xLabels}</svg>`;
 }
 
