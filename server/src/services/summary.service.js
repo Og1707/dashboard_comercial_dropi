@@ -52,11 +52,12 @@ const getSummary = async (from, to) => {
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
-  const [kpisRaw, countriesRaw, processesRaw, integrityIssues] = await Promise.all([
+  const [kpisRaw, countriesRaw, processesRaw, integrityIssues, heatmapRaw] = await Promise.all([
     repo.getGlobalKpis(from, to),
     repo.getByCountry(from, to),
     repo.getByProcess(from, to),
     repo.getIntegrityIssues(from, to),
+    repo.getByCountryProcess(from, to),
   ]);
 
   const processed = parseInt(kpisRaw.processed, 10);
@@ -75,6 +76,7 @@ const getSummary = async (from, to) => {
     },
     countries: countriesRaw.map(mapCountry),
     processes: processesRaw.map(mapProcess),
+    heatmap: heatmapRaw,
   };
 
   cache.set(cacheKey, result);

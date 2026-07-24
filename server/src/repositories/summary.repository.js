@@ -138,4 +138,28 @@ const getIntegrityIssues = async (from, to) => {
   return parseInt(rows[0]?.issues || 0, 10);
 };
 
-module.exports = { getGlobalKpis, getByCountry, getByProcess, getIntegrityIssues };
+/**
+ * Cruce país × proceso: volumen de envíos para el heatmap.
+ * Devuelve filas { country_name, country_code, process_name, processed }
+ */
+const getByCountryProcess = async (from, to) => {
+  const sql = `
+    SELECT
+      dp.nombre_pais                    AS country_name,
+      dp.codigo_iso2                    AS country_code,
+      dte.nombre_tipo_envio             AS process_name,
+      COUNT(m.id_mensaje)::integer      AS processed
+    FROM ${SCHEMA}.fact_mensajes_ghl m
+    INNER JOIN ${SCHEMA}.paises dp ON m.id_pais = dp.id_pais
+    INNER JOIN ${SCHEMA}.dim_tipo_envio dte ON m.id_tipo_envio = dte.id_tipo_envio
+    WHERE m.fecha_envio >= $1::date
+      AND m.fecha_envio < ($2::date + INTERVAL '1 day')
+      AND dte.activo = TRUE
+    GROUP BY dp.nombre_pais, dp.codigo_iso2, dte.nombre_tipo_envio
+    ORDER BY dp.nombre_pais ASC, dte.nombre_tipo_envio ASC
+  `;
+  const { rows } = await db.query(sql, [from, to]);
+  return rows;
+};
+
+module.exports = { getGlobalKpis, getByCountry, getByProcess, getIntegrityIssues, getByCountryProcess };

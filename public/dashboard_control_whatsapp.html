@@ -627,23 +627,40 @@ function renderTrendCharts(data, processNames){
 }
 
 /* ── HEATMAP ─────────────────────────────────────────── */
-function renderHeatmap(targetId, countries, processes){
-  if(!countries.length||!processes.length) return;
+function renderHeatmap(targetId, heatmapRows, processes){
+  if(!heatmapRows||!heatmapRows.length||!processes.length) return;
+
   const procNames = processes.map(p=>p.name);
-  // Construir valores a partir de datos reales (processed por proceso viene del summary global)
-  const maxCell = Math.max(...countries.map(c=>c.processed), 1);
+
+  // Construir mapa { country_name: { process_name: processed } }
+  const dataMap = {};
+  const countryOrder = [];
+  heatmapRows.forEach(r=>{
+    if(!dataMap[r.country_name]){
+      dataMap[r.country_name] = { code: r.country_code };
+      countryOrder.push(r.country_name);
+    }
+    dataMap[r.country_name][r.process_name] = r.processed;
+  });
+
+  // Valor máximo de toda la tabla para escalar la intensidad del color
+  const allVals = heatmapRows.map(r=>r.processed);
+  const maxVal  = Math.max(...allVals, 1);
+
   const header = `<tr><th>País</th>${procNames.map(n=>`<th>${n}</th>`).join('')}</tr>`;
-  const rows = countries.map(c=>{
-    const share = c.processed / maxCell;
-    const cells = procNames.map(()=>{
-      const v = Math.round(c.processed / procNames.length);
-      const intensity = share;
-      const bg = `rgba(63,182,211,${(0.08+intensity*0.42).toFixed(2)})`;
-      return `<td class="hm-cell" style="background:${bg}">${v.toLocaleString('es')}</td>`;
+  const rows = countryOrder.map(cname=>{
+    const cdata = dataMap[cname];
+    const cells = procNames.map(pname=>{
+      const v = cdata[pname];
+      if(v===undefined) return `<td class="hm-cell hm-empty">—</td>`;
+      const intensity = v / maxVal;
+      const bg = `rgba(63,182,211,${(0.07+intensity*0.55).toFixed(2)})`;
+      return `<td class="hm-cell" style="background:${bg}">${Number(v).toLocaleString('es')}</td>`;
     }).join('');
-    return `<tr><td class="hm-country">${c.name} <small>${c.code}</small></td>${cells}</tr>`;
+    return `<tr><td class="hm-country">${cname} <small>${cdata.code}</small></td>${cells}</tr>`;
   }).join('');
-  const table = `<table class="heatmap-table">${header}${rows}</table>`;
+
+  const table = `<table class="heatmap-table"><thead>${header}</thead><tbody>${rows}</tbody></table>`;
   ['volumeHeatmap','volumeHeatmapV2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.innerHTML=table; });
 }
 
@@ -904,7 +921,7 @@ async function loadAll(){
     renderRanking('processRankingV2', processes, false);
 
     // Heatmap
-    renderHeatmap('volumeHeatmap', countries, processes);
+    renderHeatmap('volumeHeatmap', summaryData.heatmap, processes);
 
     // Trend chart
     renderTrendCharts(trendData, processNames);
