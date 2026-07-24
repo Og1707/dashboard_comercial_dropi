@@ -37,6 +37,11 @@ app.use(express.static(path.join(__dirname, '../..', 'public')));
 // ── API routes ─────────────────────────────────────────────────────────────
 app.use('/api', apiLimiter, apiRouter);
 
+// ── Health check ──────────────────────────────────────────────────────────
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
 // ── 404 ────────────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada' });
