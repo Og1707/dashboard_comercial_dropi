@@ -6,7 +6,13 @@ const SCHEMA = 'comercial_marketing';
 
 /**
  * Listado paginado de contactos con mensajes no entregados.
- * Incluye trazabilidad operativa completa (plantilla, workflow_id, error y teléfono).
+ * Fuente: fact_mensajes_ghl WHERE entregado = FALSE
+ * - telefono / contact_id  → dim_contactos via id_contacto
+ * - proceso                → dim_tipo_envio via id_tipo_envio (nombre del proceso)
+ * - plantilla / workflow_id → fact_mensajes_ghl.plantilla / workflow_id
+ * - motivo de falla        → fact_registro_errores (LEFT JOIN, vacío si no hay error)
+ * - fecha                  → fact_mensajes_ghl.fecha_envio
+ * Filtro temporal sobre m.fecha_envio.
  */
 const getNotDelivered = async (from, to, { country, reason, limit = 50, offset = 0 }) => {
   const params = [from, to];
@@ -23,40 +29,40 @@ const getNotDelivered = async (from, to, { country, reason, limit = 50, offset =
 
   const whereExtra = filters.length ? 'AND ' + filters.join(' AND ') : '';
 
-  // Cláusula base compartida para asegurar exactitud entre el conteo total y los datos
   const baseFromWhere = `
-    FROM ${SCHEMA}.fact_registro_errores e
-    INNER JOIN ${SCHEMA}.paises dp ON e.id_pais = dp.id_pais
-    INNER JOIN ${SCHEMA}.dim_contactos c ON e.id_contacto = c.id_contacto
-    INNER JOIN ${SCHEMA}.dim_tipo_envio dte ON e.id_tipo_envio = dte.id_tipo_envio
-    WHERE e.fecha_error >= $1::date
-      AND e.fecha_error < ($2::date + INTERVAL '1 day')
+    FROM ${SCHEMA}.fact_mensajes_ghl m
+    INNER JOIN ${SCHEMA}.dim_contactos c   ON m.id_contacto  = c.id_contacto
+    INNER JOIN ${SCHEMA}.dim_tipo_envio dte ON m.id_tipo_envio = dte.id_tipo_envio
+    INNER JOIN ${SCHEMA}.paises dp          ON m.id_pais       = dp.id_pais
+    LEFT  JOIN ${SCHEMA}.fact_registro_errores e
+      ON e.id_contacto   = m.id_contacto
+      AND e.id_tipo_envio = m.id_tipo_envio
+      AND e.fecha_error::date = m.fecha_envio::date
+    WHERE m.entregado = FALSE
+      AND m.fecha_envio >= $1::date
+      AND m.fecha_envio < ($2::date + INTERVAL '1 day')
       ${whereExtra}
   `;
 
-  // 1. Total exacto para el paginador
-  const countSql = `
-    SELECT COUNT(*) AS total
-    ${baseFromWhere}
-  `;
+  const countSql = `SELECT COUNT(*) AS total ${baseFromWhere}`;
 
-  // 2. Consulta de datos paginada
   const dataParams = [...params, limit, offset];
-  const limitPH = `$${dataParams.length - 1}`;
+  const limitPH  = `$${dataParams.length - 1}`;
   const offsetPH = `$${dataParams.length}`;
 
   const dataSql = `
     SELECT
       c.telefono,
-      c.ghl_id                          AS contact_id,
-      dp.nombre_pais                    AS country,
-      dp.codigo_iso2                    AS code,
-      dte.nombre_tipo_envio             AS process,
-      e.codigo_error,
-      e.descripcion_error               AS reason,
-      e.fecha_error                     AS date
+      c.ghl_id                                AS contact_id,
+      dp.nombre_pais                          AS country,
+      dp.codigo_iso2                          AS code,
+      dte.nombre_tipo_envio                   AS process,
+      COALESCE(m.plantilla, '—')                AS template,
+      COALESCE(m.workflow_id, '—')            AS workflow_id,
+      COALESCE(e.descripcion_error, 'Sin motivo')       AS reason,
+      m.fecha_envio                           AS date
     ${baseFromWhere}
-    ORDER BY e.fecha_error DESC
+    ORDER BY m.fecha_envio DESC
     LIMIT ${limitPH} OFFSET ${offsetPH}
   `;
 
@@ -72,13 +78,13 @@ const getNotDelivered = async (from, to, { country, reason, limit = 50, offset =
 };
 
 /**
- * Lista de motivos de error únicos activos para poblar el filtro desplegable del dashboard.
+ * Lista de motivos de error únicos para el filtro desplegable.
  */
 const getFailureReasons = async () => {
   const sql = `
     SELECT DISTINCT descripcion_error AS reason
     FROM ${SCHEMA}.fact_registro_errores
-    WHERE descripcion_error IS NOT NULL 
+    WHERE descripcion_error IS NOT NULL
       AND TRIM(descripcion_error) <> ''
     ORDER BY reason ASC
   `;

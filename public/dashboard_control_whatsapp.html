@@ -410,6 +410,7 @@
             <th>Plantilla</th><th>Workflow ID</th>
           </tr>
         </thead>
+        
         <tbody></tbody>
       </table>
       </div>
@@ -785,14 +786,14 @@ function renderNotDeliveredTable(data){
   }
   tbody.innerHTML = data.rows.map(r=>`
     <tr>
-      <td class="mono">${r.phone||'—'}</td>
-      <td class="mono">${r.contactId||'—'}</td>
-      <td>${r.country}</td>
-      <td>${r.process}</td>
-      <td class="template-name">${r.errorCode||'—'}</td>
-      <td></td>
-      <td>${r.reason}</td>
-      <td class="mono">${r.date||'—'}</td>
+      <td class="mono">${r.telefono||'—'}</td>
+      <td class="mono">${r.contact_id||'—'}</td>
+      <td>${r.country||'—'}</td>
+      <td>${r.process||'—'}</td>
+      <td class="template-name">${r.template||'—'}</td>
+      <td class="workflow-id">${r.workflow_id||'—'}</td>
+      <td>${r.reason||'—'}</td>
+      <td class="mono">${r.date ? new Date(r.date).toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'}) : '—'}</td>
     </tr>`).join('');
 }
 

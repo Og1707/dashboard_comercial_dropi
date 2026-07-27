@@ -3,14 +3,15 @@
 const repo = require('../repositories/notDelivered.repository');
 
 const mapRow = (row) => ({
-  phone: row.telefono,
-  contactId: row.contact_id || '—',
-  country: row.country,
-  code: row.code,
-  process: row.process,
-  errorCode: row.codigo_error,
-  reason: row.reason || 'Sin descripción',
-  date: row.date ? new Date(row.date).toISOString().slice(0, 10) : null,
+  telefono:    row.telefono   || '—',
+  contact_id:  row.contact_id || '—',
+  country:     row.country    || '—',
+  code:        row.code       || '—',
+  process:     row.process    || '—',
+  template:    row.template   || '—',
+  workflow_id: row.workflow_id || '—',
+  reason:      row.reason     || '',
+  date:        row.date       || null,
 });
 
 const getNotDelivered = async (from, to, filters) => {
