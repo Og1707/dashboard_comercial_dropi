@@ -261,7 +261,7 @@
   </nav>
 
   <div class="status-cluster">
-    <div class="live-dot-wrap"><span class="live-dot"></span> Última actualización: hoy, 08:41</div>
+    <div class="live-dot-wrap"><span class="live-dot"></span> <span id="lastUpdateLabel">Cargando…</span></div>
     <div class="date-range">
       <div class="quick-range">
         <button class="quick-btn" data-days="0">Hoy</button>
@@ -285,12 +285,12 @@
     <div class="kpi-row" style="grid-template-columns:1fr 1fr;">
       <div class="kpi-card">
         <div class="kpi-label">Tasa de entrega global</div>
-        <div class="kpi-value amber">91.4%</div>
-        <div class="kpi-sub" id="kpiSubProcessed">73,090 mensajes procesados · últimos 30 días</div>
+        <div class="kpi-value" id="kpiRate">—</div>
+        <div class="kpi-sub" id="kpiSubProcessed">— mensajes procesados · período seleccionado</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Costo total estimado</div>
-        <div class="kpi-value">$11,460</div>
+        <div class="kpi-value" id="kpiCost">—</div>
         <div class="kpi-sub">USD · tarifa por país + tipo de plantilla</div>
       </div>
     </div>
@@ -342,17 +342,17 @@
     <div class="kpi-row" style="grid-template-columns:1fr 1fr 1fr; margin-bottom:16px;">
       <div class="kpi-card">
         <div class="kpi-label">Tasa de entrega global</div>
-        <div class="kpi-value amber">91.4%</div>
-        <div class="kpi-sub" id="kpiSubProcessedV2">73,090 mensajes procesados · últimos 30 días</div>
+        <div class="kpi-value" id="kpiRateV2">—</div>
+        <div class="kpi-sub" id="kpiSubProcessedV2">— mensajes procesados · período seleccionado</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Costo total estimado</div>
-        <div class="kpi-value">$11,460</div>
+        <div class="kpi-value" id="kpiCostV2">—</div>
         <div class="kpi-sub">USD · tarifa por país + tipo de plantilla</div>
       </div>
       <div class="kpi-card alert">
         <div class="kpi-label">Integridad del dato</div>
-        <div class="kpi-value" style="font-size:26px; color:var(--amber);">⚠ 2 / 15</div>
+        <div class="kpi-value" id="kpiIntegrity" style="font-size:26px;">—</div>
         <div class="kpi-sub">subcuentas donde procesados ≠ entregados + no entregados</div>
       </div>
     </div>
@@ -417,7 +417,7 @@
     </div>
 
     <div class="panel">
-      <p class="section-label">Listado de contactos no entregados <span style="color:var(--red); text-transform:none; letter-spacing:0;">— 318 en total en el período</span></p>
+      <p class="section-label">Listado de contactos no entregados <span id="ndTotalLabel" style="color:var(--red); text-transform:none; letter-spacing:0;"></span></p>
       <div class="filters">
         <select id="filterCountry2"><option value="">País: todos</option></select>
         <select id="filterReason"><option value="">Motivo: todos</option></select>
@@ -451,15 +451,15 @@
     <div class="kpi-row" style="grid-template-columns:1fr 1fr 1fr;">
       <div class="kpi-card">
         <div class="kpi-label">Tasa de entrega — esta cuenta</div>
-        <div class="kpi-value" id="acctRate">96.0%</div>
+        <div class="kpi-value" id="acctRate">—</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Costo estimado — esta cuenta</div>
-        <div class="kpi-value" id="acctCost">$1,245</div>
+        <div class="kpi-value" id="acctCost">—</div>
       </div>
       <div class="kpi-card" id="acctIntegrityCard">
         <div class="kpi-label">Integridad del dato</div>
-        <div class="kpi-value" id="acctIntegrity" style="font-size:26px;">✓ OK</div>
+        <div class="kpi-value" id="acctIntegrity" style="font-size:26px;">—</div>
       </div>
     </div>
 
@@ -703,26 +703,26 @@ function renderKpis(kpis){
   const fmt = v => Number(v).toLocaleString('es');
   const fmtUSD = v => '$' + Number(v).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2});
 
-  document.querySelectorAll('.kpi-value.amber, .kpi-value.green, .kpi-value.red').forEach(el=>{
-    el.className='kpi-value'; // reset color classes
-  });
-
-  const rateV1 = document.querySelector('#v1 .kpi-value');
+  // V1
+  const rateV1 = document.getElementById('kpiRate');
   if(rateV1){ rateV1.textContent=kpis.rate.toFixed(1)+'%'; rateV1.className='kpi-value '+kpis.sema; }
+  const costV1 = document.getElementById('kpiCost');
+  if(costV1) costV1.textContent = fmtUSD(kpis.cost);
 
-  // V2 first 3 cards
-  const v2cards = document.querySelectorAll('#v2 .kpi-card .kpi-value');
-  if(v2cards[0]){ v2cards[0].textContent=kpis.rate.toFixed(1)+'%'; v2cards[0].className='kpi-value '+kpis.sema; }
-  if(v2cards[1]){ v2cards[1].textContent=fmtUSD(kpis.cost); }
-  if(v2cards[2]){ v2cards[2].textContent= kpis.integrityIssues>0 ? `⚠ ${kpis.integrityIssues}` : '✓ OK'; v2cards[2].style.color=kpis.integrityIssues>0?'var(--amber)':'var(--green)'; }
+  // V2
+  const rateV2 = document.getElementById('kpiRateV2');
+  if(rateV2){ rateV2.textContent=kpis.rate.toFixed(1)+'%'; rateV2.className='kpi-value '+kpis.sema; }
+  const costV2 = document.getElementById('kpiCostV2');
+  if(costV2) costV2.textContent = fmtUSD(kpis.cost);
+  const integrity = document.getElementById('kpiIntegrity');
+  if(integrity){
+    integrity.textContent = kpis.integrityIssues > 0 ? `⚠ ${kpis.integrityIssues}` : '✓ OK';
+    integrity.style.color = kpis.integrityIssues > 0 ? 'var(--amber)' : 'var(--green)';
+  }
 
   // Sub labels
-  const subText=`${fmt(kpis.processed)} mensajes procesados · período seleccionado`;
+  const subText = `${fmt(kpis.processed)} mensajes procesados · período seleccionado`;
   ['kpiSubProcessed','kpiSubProcessedV2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.textContent=subText; });
-
-  // V1 cost card
-  const v1cards = document.querySelectorAll('#v1 .kpi-card .kpi-value');
-  if(v1cards[1]) v1cards[1].textContent = fmtUSD(kpis.cost);
 }
 
 /* ── DETAIL TABLE ────────────────────────────────────── */
@@ -777,8 +777,8 @@ function renderNotDeliveredTable(data){
   const tbody = document.querySelector('#notDeliveredTable tbody');
   if(!tbody) return;
   // Update header count
-  const label = document.querySelector('#v2 .section-label span[style*="red"]');
-  if(label) label.textContent = `— ${data.total} en total en el período`;
+  const label = document.getElementById('ndTotalLabel');
+  if(label) label.textContent = data.total > 0 ? `— ${data.total} en total en el período` : '';
 
   if(!data.rows.length){
     tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--text-faint);padding:20px">Sin contactos no entregados en este período.</td></tr>`;
@@ -950,10 +950,8 @@ async function loadAll(){
     // Last update label
     const now = new Date();
     const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
-    document.querySelectorAll('.live-dot-wrap').forEach(el=>{
-      const txt = el.childNodes[el.childNodes.length-1];
-      if(txt) txt.textContent = ` Última actualización: hoy, ${timeStr}`;
-    });
+    const lastUpdate = document.getElementById('lastUpdateLabel');
+    if(lastUpdate) lastUpdate.textContent = `Última actualización: hoy, ${timeStr}`;
 
   }catch(e){
     showError('Error cargando datos. Verifique la conexión con el servidor.');
