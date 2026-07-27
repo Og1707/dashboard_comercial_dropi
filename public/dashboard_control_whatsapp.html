@@ -737,15 +737,14 @@ function renderDetailTable(data){
   }
   tbody.innerHTML = data.rows.map(r=>`
     <tr>
-      <td class="row-country">${r.code}</td>
-      <td>${r.account}</td>
-      <td>${r.process}</td>
+      <td class="row-country">${r.code||'—'}</td>
+      <td>${r.account||'—'}</td>
+      <td>${r.process||'—'}</td>
       <td class="num">${Number(r.processed).toLocaleString('es')}</td>
       <td class="num">${Number(r.delivered).toLocaleString('es')}</td>
       <td class="num">${Number(r.failed).toLocaleString('es')}</td>
       <td class="num"><span class="sema ${semaColor(r.rate)}" style="display:inline-block;margin-right:6px;"></span>${Number(r.rate).toFixed(1)}%</td>
       <td class="num">$${Number(r.cost).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-      <td class="template-name">${r.templateCategory||'—'}</td>
     </tr>`).join('');
   // footer
   const existing = tbody.querySelector('tr.footer-row');
