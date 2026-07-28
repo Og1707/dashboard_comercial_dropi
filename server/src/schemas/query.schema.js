@@ -36,6 +36,7 @@ const summaryQuerySchema = dateRangeSchema;
 const trendQuerySchema = dateRangeSchema.and(
   z.object({
     country: z.string().max(100).optional(),
+    subcuenta: z.string().max(200).optional(),
   })
 );
 
@@ -62,7 +63,12 @@ const accountParamsSchema = z.object({
   name: z.string().min(1).max(200),
 });
 
-const accountQuerySchema = dateRangeSchema;
+const accountQuerySchema = dateRangeSchema.and(
+  z.object({
+    limit: z.string().transform(Number).pipe(z.number().int().min(1).max(MAX_LIMIT)).default('10'),
+    offset: z.string().transform(Number).pipe(z.number().int().min(0)).default('0'),
+  })
+);
 
 module.exports = {
   summaryQuerySchema,

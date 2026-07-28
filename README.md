@@ -63,6 +63,8 @@ const [kpis, countries, processes, integrityIssues] = await Promise.all([
 
 ## API Reference
 
+> 📘 **Documentación detallada completa:** Consulta [API_DOCUMENTATION.md](file:///C:/Users/Osman/Documents/Trabajo/Dropi/Comercial/Dashboard/API_DOCUMENTATION.md) para ver ejemplos de payloads JSON, respuestas de error, políticas de validación Zod y arquitectura detallada por componentes.
+
 Base path: `/api` · Rate limit: **60 req/min por IP**
 
 | Método | Ruta | Descripción |

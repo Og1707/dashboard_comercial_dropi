@@ -10,6 +10,7 @@ const semaColor = (rate) => {
 };
 
 const mapProcess = (row) => ({
+  name: row.process,
   process: row.process,
   processed: parseInt(row.processed, 10),
   delivered: parseInt(row.delivered, 10),
@@ -21,10 +22,10 @@ const mapProcess = (row) => ({
 
 const getAccounts = async () => repo.getAccounts();
 
-const getAccountData = async (from, to, name) => {
-  const [processes, worklist] = await Promise.all([
+const getAccountData = async (from, to, name, { limit = 10, offset = 0 } = {}) => {
+  const [processes, worklistData] = await Promise.all([
     repo.getAccountKpis(from, to, name),
-    repo.getAccountWorkList(name),
+    repo.getAccountWorkList(name, { limit, offset }),
   ]);
 
   const mappedProcesses = processes.map(mapProcess);
@@ -46,13 +47,18 @@ const getAccountData = async (from, to, name) => {
       sema: semaColor(globalRate),
     },
     processes: mappedProcesses,
-    worklist: worklist.map((r) => ({
-      phone: r.telefono,
-      contactId: r.contact_id || '—',
-      process: r.process,
-      reason: r.reason || 'Sin descripción',
-      date: r.date ? new Date(r.date).toISOString().slice(0, 10) : null,
-    })),
+    worklist: {
+      rows: worklistData.rows.map((r) => ({
+        phone: r.telefono,
+        contactId: r.contact_id || '—',
+        process: r.process,
+        reason: r.reason || 'Sin descripción',
+        date: r.date ? new Date(r.date).toISOString().slice(0, 10) : null,
+      })),
+      total: worklistData.total,
+      limit,
+      offset,
+    },
   };
 };
 

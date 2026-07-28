@@ -34,13 +34,13 @@ const buildDayList = (from, to) => {
  *
  * - Rellena con 0 los días sin datos para mantener el gráfico alineado.
  */
-const getTrend = async (from, to, country = null) => {
-  const scope = country && country !== 'Todos' ? country : 'Todos';
+const getTrend = async (from, to, country = null, subcuenta = null) => {
+  const scope = subcuenta ? `sub:${subcuenta}` : (country && country !== 'Todos' ? country : 'Todos');
   const cacheKey = `trend:${from}:${to}:${scope}`;
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
-  const rows = await repo.getTrendSeries(from, to, scope === 'Todos' ? null : scope);
+  const rows = await repo.getTrendSeries(from, to, scope === 'Todos' ? null : country, subcuenta);
 
   const dayList = buildDayList(from, to);
   const dayLabels = dayList.map(fmtDateEs);

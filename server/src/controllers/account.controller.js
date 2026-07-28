@@ -14,8 +14,8 @@ const getAccounts = async (req, res, next) => {
 const getAccountData = async (req, res, next) => {
   try {
     const { name } = req.validated_params;
-    const { from, to } = req.validated_query;
-    const data = await accountService.getAccountData(from, to, name);
+    const { from, to, limit, offset } = req.validated_query;
+    const data = await accountService.getAccountData(from, to, name, { limit, offset });
     res.json(data);
   } catch (err) {
     next(err);

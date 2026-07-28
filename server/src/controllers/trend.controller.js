@@ -4,8 +4,8 @@ const trendService = require('../services/trend.service');
 
 const getTrend = async (req, res, next) => {
   try {
-    const { from, to, country } = req.validated_query;
-    const data = await trendService.getTrend(from, to, country);
+    const { from, to, country, subcuenta } = req.validated_query;
+    const data = await trendService.getTrend(from, to, country, subcuenta);
     res.json(data);
   } catch (err) {
     next(err);

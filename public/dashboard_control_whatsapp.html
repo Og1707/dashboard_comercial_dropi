@@ -49,11 +49,11 @@
     background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
   }
   .brand{display:flex; align-items:center; gap:12px;}
-  .brand-mark{
-    width:34px;height:34px;border-radius:8px;
-    background:conic-gradient(from 210deg, var(--green), var(--cyan) 40%, var(--green));
-    display:flex;align-items:center;justify-content:center;
-    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:13px;color:#062615;
+  .brand-logo{
+    height:40px;
+    width:auto;
+    object-fit:contain;
+    filter:drop-shadow(0 2px 8px rgba(0, 200, 255, 0.25));
   }
   .brand-text h1{font-size:15px;margin:0;font-weight:600;letter-spacing:0.2px;}
   .brand-text p{margin:2px 0 0;font-size:12px;color:var(--text-muted);}
@@ -247,7 +247,7 @@
 
 <header class="topbar">
   <div class="brand">
-    <div class="brand-mark">✓✓</div>
+    <img src="/logo.png" alt="Logo" class="brand-logo">
     <div class="brand-text">
       <h1>Control Operativo Masivos</h1>
       <p>WhatsApp · Dropi · Red LatAm (10 países)</p>
@@ -430,6 +430,11 @@
         <tbody></tbody>
       </table>
       </div>
+      <div id="ndPagination" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:14px;padding-top:10px;border-top:1px solid var(--border);">
+        <span id="ndPageInfo" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);"></span>
+        <button id="btnNdPrev" class="btn-mini" disabled>← Anterior</button>
+        <button id="btnNdNext" class="btn-mini" disabled>Siguiente →</button>
+      </div>
     </div>
   </section>
 
@@ -443,23 +448,39 @@
     </div>
 
     <div class="worklist">
-      <h2>Lista de trabajo — no entregados de hoy</h2>
-      <p>Contactos que no recibieron el mensaje en las últimas 24 horas. Prioriza según motivo de falla.</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <h2 style="margin:0;">Lista de trabajo — no entregados recientes</h2>
+        <span id="worklistTotalLabel" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-faint);"></span>
+      </div>
+      <p style="margin-top:0;">Contactos que no recibieron el mensaje recientemente en esta subcuenta. Prioriza según motivo de falla.</p>
       <div id="workItems"></div>
+      <div id="worklistPagination" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:14px;padding-top:10px;border-top:1px solid var(--border);">
+        <span id="worklistPageInfo" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);"></span>
+        <button id="btnWorkPrev" class="btn-mini" disabled>← Anterior</button>
+        <button id="btnWorkNext" class="btn-mini" disabled>Siguiente →</button>
+      </div>
     </div>
 
-    <div class="kpi-row" style="grid-template-columns:1fr 1fr 1fr;">
+    <div class="kpi-row" style="grid-template-columns:1fr 1.2fr 1.2fr 1fr;">
       <div class="kpi-card">
-        <div class="kpi-label">Tasa de entrega — esta cuenta</div>
-        <div class="kpi-value" id="acctRate">—</div>
+        <div class="kpi-label">Procesos Asignados</div>
+        <div class="kpi-value" id="acctProcessesCount" style="color:var(--cyan);">—</div>
+        <div class="kpi-sub">Tipos de envío habilitados</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Costo estimado — esta cuenta</div>
+        <div class="kpi-label">Tasa de entrega — Acumulada</div>
+        <div class="kpi-value" id="acctRate">—</div>
+        <div class="kpi-sub" id="acctSubProcessed">— msjs procesados</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Costo total acumulado</div>
         <div class="kpi-value" id="acctCost">—</div>
+        <div class="kpi-sub">USD · período seleccionado</div>
       </div>
       <div class="kpi-card" id="acctIntegrityCard">
-        <div class="kpi-label">Integridad del dato</div>
-        <div class="kpi-value" id="acctIntegrity" style="font-size:26px;">—</div>
+        <div class="kpi-label">Estado de Cuenta</div>
+        <div class="kpi-value" id="acctIntegrity" style="font-size:24px;">✓ OK</div>
+        <div class="kpi-sub">Operación normal</div>
       </div>
     </div>
 
@@ -475,7 +496,7 @@
     </div>
 
     <div class="panel">
-      <p class="section-label">Por proceso — esta cuenta</p>
+      <p class="section-label">Desglose por proceso — esta cuenta</p>
       <div id="processRankingV3"></div>
     </div>
   </section>
@@ -775,25 +796,41 @@ let ndFilters = { country:'', reason:'', limit:50, offset:0 };
 function renderNotDeliveredTable(data){
   const tbody = document.querySelector('#notDeliveredTable tbody');
   if(!tbody) return;
+  
+  const total = data.total || 0;
+  const rows = data.rows || [];
+
   // Update header count
   const label = document.getElementById('ndTotalLabel');
-  if(label) label.textContent = data.total > 0 ? `— ${data.total} en total en el período` : '';
+  if(label) label.textContent = total > 0 ? `— ${total.toLocaleString('es')} en total en el período` : '';
 
-  if(!data.rows.length){
+  if(!rows.length){
     tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--text-faint);padding:20px">Sin contactos no entregados en este período.</td></tr>`;
-    return;
+  } else {
+    tbody.innerHTML = rows.map(r=>`
+      <tr>
+        <td class="mono">${r.telefono||'—'}</td>
+        <td class="mono">${r.contact_id||'—'}</td>
+        <td>${r.country||'—'}</td>
+        <td>${r.process||'—'}</td>
+        <td class="template-name">${r.template||'—'}</td>
+        <td class="workflow-id">${r.workflow_id||'—'}</td>
+        <td>${r.reason||'—'}</td>
+        <td class="mono">${r.date ? new Date(r.date).toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'}) : '—'}</td>
+      </tr>`).join('');
   }
-  tbody.innerHTML = data.rows.map(r=>`
-    <tr>
-      <td class="mono">${r.telefono||'—'}</td>
-      <td class="mono">${r.contact_id||'—'}</td>
-      <td>${r.country||'—'}</td>
-      <td>${r.process||'—'}</td>
-      <td class="template-name">${r.template||'—'}</td>
-      <td class="workflow-id">${r.workflow_id||'—'}</td>
-      <td>${r.reason||'—'}</td>
-      <td class="mono">${r.date ? new Date(r.date).toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'}) : '—'}</td>
-    </tr>`).join('');
+
+  // Paginación UI
+  const pageInfo = document.getElementById('ndPageInfo');
+  const btnPrev = document.getElementById('btnNdPrev');
+  const btnNext = document.getElementById('btnNdNext');
+
+  const startNum = total === 0 ? 0 : ndFilters.offset + 1;
+  const endNum = Math.min(ndFilters.offset + ndFilters.limit, total);
+  if(pageInfo) pageInfo.textContent = `${startNum.toLocaleString('es')}–${endNum.toLocaleString('es')} de ${total.toLocaleString('es')}`;
+
+  if(btnPrev) btnPrev.disabled = ndFilters.offset === 0;
+  if(btnNext) btnNext.disabled = ndFilters.offset + ndFilters.limit >= total;
 }
 
 async function loadNotDelivered(){
@@ -807,6 +844,27 @@ async function loadNotDelivered(){
     const data = await apiFetch(`/api/not-delivered?${params}`);
     renderNotDeliveredTable(data);
   }catch(e){ showError('Error cargando contactos no entregados'); }
+}
+
+document.getElementById('btnNdPrev')?.addEventListener('click', ()=>{
+  if(ndFilters.offset >= ndFilters.limit){
+    ndFilters.offset -= ndFilters.limit;
+    loadNotDelivered();
+  }
+});
+
+document.getElementById('btnNdNext')?.addEventListener('click', ()=>{
+  ndFilters.offset += ndFilters.limit;
+  loadNotDelivered();
+});
+
+/* ── UTILIDAD DE DEBOUNCE (Optimizador de rendimiento) ── */
+function debounce(fn, delay = 350) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
 }
 
 /* ── TREND COUNTRY FILTER ────────────────────────────── */
@@ -827,66 +885,144 @@ async function loadNotDelivered(){
   });
 });
 
-/* ── FILTERS V2 ──────────────────────────────────────── */
-document.getElementById('filterCountry')?.addEventListener('change', e=>{ detailFilters.country=e.target.value; loadDetail(); });
-document.getElementById('filterProcess')?.addEventListener('change', e=>{ detailFilters.process=e.target.value; loadDetail(); });
-document.getElementById('filterSearch')?.addEventListener('input',  e=>{ detailFilters.search=e.target.value;  loadDetail(); });
-document.getElementById('filterCountry2')?.addEventListener('change', e=>{ ndFilters.country=e.target.value; loadNotDelivered(); });
-document.getElementById('filterReason')?.addEventListener('change',   e=>{ ndFilters.reason=e.target.value;  loadNotDelivered(); });
+/* ── FILTERS V2 OPTIMIZADOS CON DEBOUNCE ─────────────── */
+document.getElementById('filterCountry')?.addEventListener('change', e=>{ detailFilters.country=e.target.value; detailFilters.offset=0; loadDetail(); });
+document.getElementById('filterProcess')?.addEventListener('change', e=>{ detailFilters.process=e.target.value; detailFilters.offset=0; loadDetail(); });
+document.getElementById('filterSearch')?.addEventListener('input', debounce(e=>{ detailFilters.search=e.target.value.trim(); detailFilters.offset=0; loadDetail(); }, 350));
+document.getElementById('filterCountry2')?.addEventListener('change', e=>{ ndFilters.country=e.target.value; ndFilters.offset=0; loadNotDelivered(); });
+document.getElementById('filterReason')?.addEventListener('change', debounce(e=>{ ndFilters.reason=e.target.value.trim(); ndFilters.offset=0; loadNotDelivered(); }, 350));
 
 /* ── VISTA 3 — POR CUENTA ────────────────────────────── */
 const picker = document.getElementById('accountPicker');
+let worklistState = { offset: 0, limit: 10, total: 0 };
 
-async function renderAccount(name){
+async function renderAccount(name, resetPage = false){
   if(!name) return;
+  if(resetPage) worklistState.offset = 0;
+
   try{
-    const params = new URLSearchParams({from:currentFrom,to:currentTo});
+    const params = new URLSearchParams({
+      from: currentFrom,
+      to: currentTo,
+      limit: worklistState.limit,
+      offset: worklistState.offset
+    });
     const encodedName = encodeURIComponent(name);
     const data = await apiFetch(`/api/account/${encodedName}?${params}`);
 
-    // KPIs
-    document.getElementById('acctRate').textContent = Number(data.kpis.rate).toFixed(1)+'%';
-    document.getElementById('acctRate').className = 'kpi-value '+semaColor(data.kpis.rate);
-    document.getElementById('acctCost').textContent = '$'+Number(data.kpis.cost).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2});
+    // Cálculo del acumulado global de la subcuenta sumando sus procesos asignados
+    let totalProcessed = 0;
+    let totalDelivered = 0;
+    let totalCost = 0;
 
-    // Worklist
+    data.processes.forEach(p => {
+      totalProcessed += Number(p.processed || 0);
+      totalDelivered += Number(p.delivered || 0);
+      totalCost += Number(p.cost || 0);
+    });
+
+    const accumRate = totalProcessed > 0 ? (totalDelivered * 100.0 / totalProcessed) : 0;
+
+    // Renderizado de KPIs Acumulados
+    const procCountEl = document.getElementById('acctProcessesCount');
+    if(procCountEl) procCountEl.textContent = data.processes.length;
+
+    const rateEl = document.getElementById('acctRate');
+    if(rateEl){
+      rateEl.textContent = accumRate.toFixed(1) + '%';
+      rateEl.className = 'kpi-value ' + semaColor(accumRate);
+    }
+
+    const subProcEl = document.getElementById('acctSubProcessed');
+    if(subProcEl){
+      subProcEl.textContent = `${totalProcessed.toLocaleString('es')} msjs procesados`;
+    }
+
+    const costEl = document.getElementById('acctCost');
+    if(costEl){
+      costEl.textContent = '$' + totalCost.toLocaleString('es', {minimumFractionDigits:2, maximumFractionDigits:2});
+    }
+
+    // Worklist Paginada
     const workItems = document.getElementById('workItems');
+    const totalLabel = document.getElementById('worklistTotalLabel');
+    const pageInfo = document.getElementById('worklistPageInfo');
+    const btnPrev = document.getElementById('btnWorkPrev');
+    const btnNext = document.getElementById('btnWorkNext');
+
+    const workRows = data.worklist.rows || [];
+    worklistState.total = data.worklist.total || 0;
+
+    if(totalLabel) totalLabel.textContent = `${worklistState.total} registros en total`;
+
     if(workItems){
-      if(!data.worklist.length){
-        workItems.innerHTML='<p style="color:var(--green);font-size:13px;">✓ Sin contactos no entregados hoy.</p>';
+      if(!workRows.length){
+        workItems.innerHTML='<p style="color:var(--green);font-size:13px;padding:10px 0;">✓ Sin contactos no entregados recientes.</p>';
       } else {
-        workItems.innerHTML = data.worklist.map(it=>`
+        workItems.innerHTML = workRows.map(it=>`
           <div class="work-item">
             <span class="work-phone">${it.phone||'—'}</span>
             <span>${it.process}</span>
             <span class="work-reason">${it.reason}</span>
-            <span></span>
+            <span class="mono" style="font-size:11px;color:var(--text-faint);">${it.date || ''}</span>
             <button class="btn-mini">Re-contactar</button>
           </div>`).join('');
       }
     }
 
-    // Tendencia V3 — re-usa el trend global cacheado filtrado por esta cuenta
-    const trendParams = new URLSearchParams({from:currentFrom,to:currentTo});
-    const accAccount = accountsList.find(a=>a.name===name);
-    if(accAccount) trendParams.set('country', accAccount.country);
-    const trendD = await apiFetch(`/api/trend?${trendParams}`);
-    const procNames = Object.keys(trendD.series);
-    cachedDays = trendD.days;
-    renderMultiLineSVG('trendChartV3', trendD.series, procNames);
-    const legendHTML = procNames.map((n,i)=>`<span><i style="background:${getProcessColor(n,i)}"></i> ${n}</span>`).join('');
-    const legEl = document.getElementById('trendLegendV3'); if(legEl) legEl.innerHTML=legendHTML;
-    const nDays = cachedDays.length;
-    const rangeLabel = nDays===1?cachedDays[0]:`${cachedDays[0]} — ${cachedDays[nDays-1]} (${nDays} días)`;
-    const rlEl = document.getElementById('trendRangeLabelV3'); if(rlEl) rlEl.textContent=`${rangeLabel} · ${name}`;
+    // Paginación UI
+    const startNum = worklistState.total === 0 ? 0 : worklistState.offset + 1;
+    const endNum = Math.min(worklistState.offset + worklistState.limit, worklistState.total);
+    if(pageInfo) pageInfo.textContent = `${startNum}–${endNum} de ${worklistState.total}`;
 
-    // Ranking V3
+    if(btnPrev) btnPrev.disabled = worklistState.offset === 0;
+    if(btnNext) btnNext.disabled = worklistState.offset + worklistState.limit >= worklistState.total;
+
+    // Ranking por proceso V3 (muestra cada uno de sus procesos asignados)
     renderRanking('processRankingV3', data.processes, false);
 
-  }catch(e){ console.error('Error cargando cuenta', e); }
+    // Tendencia V3 — filtrada exactamente por esta subcuenta (en bloque defensivo separado)
+    try {
+      const trendParams = new URLSearchParams({from:currentFrom,to:currentTo,subcuenta:name});
+      const trendD = await apiFetch(`/api/trend?${trendParams}`);
+      const procNames = Object.keys(trendD.series);
+      renderMultiLineSVG('trendChartV3', trendD.series, procNames);
+      const legendHTML = procNames.map((n,i)=>`<span><i style="background:${getProcessColor(n,i)}"></i> ${n}</span>`).join('');
+      const legEl = document.getElementById('trendLegendV3'); if(legEl) legEl.innerHTML=legendHTML;
+      const nDays = trendD.days ? trendD.days.length : 0;
+      const rangeLabel = nDays===1 ? trendD.days[0] : (nDays > 1 ? `${trendD.days[0]} — ${trendD.days[nDays-1]} (${nDays} días)` : 'Sin datos');
+      const rlEl = document.getElementById('trendRangeLabelV3'); if(rlEl) rlEl.textContent=`${rangeLabel} · ${name}`;
+    } catch(errTrend) {
+      console.warn('No se pudo cargar la tendencia para la cuenta:', errTrend);
+    }
+
+  }catch(e){
+    console.error('Error cargando cuenta:', e);
+    showError('Error cargando datos de la subcuenta seleccionada.');
+  }
 }
 
-picker?.addEventListener('change', e=>renderAccount(e.target.value));
+document.getElementById('btnWorkPrev')?.addEventListener('click', ()=>{
+  if(worklistState.offset >= worklistState.limit){
+    worklistState.offset -= worklistState.limit;
+    renderAccount(picker.value);
+  }
+});
+
+document.getElementById('btnWorkNext')?.addEventListener('click', ()=>{
+  if(worklistState.offset + worklistState.limit < worklistState.total){
+    worklistState.offset += worklistState.limit;
+    renderAccount(picker.value);
+  }
+});
+
+picker?.addEventListener('change', e=>renderAccount(e.target.value, true));
+
+/* ── DEBOUNCE PARA CAMBIO DE FECHAS ─────────────────── */
+const debouncedLoadAll = debounce(() => loadAll(), 400);
+
+dateFromEl.addEventListener('change', ()=>{ clearQuickActive(); debouncedLoadAll(); });
+dateToEl.addEventListener('change',   ()=>{ clearQuickActive(); debouncedLoadAll(); });
 
 /* ── CARGA PRINCIPAL ─────────────────────────────────── */
 async function loadAll(){
@@ -943,8 +1079,12 @@ async function loadAll(){
       procEl.insertAdjacentHTML('beforeend', processes.map(p=>`<option value="${p.name}">${p.name}</option>`).join(''));
     }
 
-    // Load detail + not-delivered tables
-    await Promise.all([loadDetail(), loadNotDelivered()]);
+    // Load detail + not-delivered tables & refresh account view if visible
+    await Promise.all([
+      loadDetail(), 
+      loadNotDelivered(), 
+      picker && picker.value ? renderAccount(picker.value) : Promise.resolve()
+    ]);
 
     // Last update label
     const now = new Date();
