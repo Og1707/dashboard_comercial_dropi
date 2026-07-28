@@ -59,7 +59,7 @@ const getNotDelivered = async (from, to, { country, reason, limit = 50, offset =
       dte.nombre_tipo_envio                   AS process,
       COALESCE(m.plantilla, '—')                AS template,
       COALESCE(m.workflow_id, '—')            AS workflow_id,
-      COALESCE(e.descripcion_error, 'Sin motivo')       AS reason,
+      COALESCE(e.descripcion_error, 'Desconocido')       AS reason,
       m.fecha_envio                           AS date
     ${baseFromWhere}
     ORDER BY m.fecha_envio DESC
