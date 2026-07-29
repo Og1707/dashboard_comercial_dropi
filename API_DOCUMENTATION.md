@@ -152,37 +152,48 @@ Retorna KPIs globales, consolidado por país y proceso con sus respectivos semá
 * **Respuesta Exitosa (200 OK):**
 ```json
 {
-  "range": {
-    "from": "2026-07-01",
-    "to": "2026-07-27"
-  },
   "kpis": {
-    "total_sent": 150000,
-    "total_delivered": 141000,
-    "total_failed": 9000,
-    "delivery_rate": 94.0
+    "processed": 150000,
+    "delivered": 141000,
+    "failed": 9000,
+    "rate": 94.0,
+    "cost": 1250.80,
+    "sema": "green",
+    "integrityIssues": 0
   },
   "countries": [
     {
-      "country": "Colombia",
-      "total_sent": 80000,
-      "total_delivered": 76000,
-      "total_failed": 4000,
-      "delivery_rate": 95.0,
-      "status": "GREEN"
+      "code": "CO",
+      "name": "Colombia",
+      "processed": 80000,
+      "delivered": 76000,
+      "failed": 4000,
+      "rate": 95.0,
+      "cost": 680.40,
+      "sema": "green"
     }
   ],
   "processes": [
     {
-      "process": "Confirmación Pedido",
-      "total_sent": 50000,
-      "total_delivered": 44000,
-      "total_failed": 6000,
-      "delivery_rate": 88.0,
-      "status": "AMBER"
+      "name": "Confirmación de Órdenes",
+      "templateCategory": "utility",
+      "processed": 50000,
+      "delivered": 44000,
+      "failed": 6000,
+      "rate": 88.0,
+      "cost": 420.00,
+      "sema": "amber",
+      "validation": false
     }
   ],
-  "integrityIssues": []
+  "heatmap": [
+    {
+      "country_name": "Colombia",
+      "country_code": "CO",
+      "process_name": "Confirmación de Órdenes",
+      "processed": 25000
+    }
+  ]
 }
 ```
 
@@ -203,31 +214,18 @@ Construye la serie de tiempo diaria de envíos, entregas y fallos en el rango in
 * **Respuesta Exitosa (200 OK):**
 ```json
 {
-  "series": [
-    {
-      "date": "2026-07-26",
-      "date_formatted": "26 jul",
-      "total_sent": 5000,
-      "total_delivered": 4750,
-      "total_failed": 250,
-      "delivery_rate": 95.0
-    },
-    {
-      "date": "2026-07-27",
-      "date_formatted": "27 jul",
-      "total_sent": 5200,
-      "total_delivered": 4940,
-      "total_failed": 260,
-      "delivery_rate": 95.0
-    }
-  ]
+  "days": ["Jul 1", "Jul 2", "Jul 3"],
+  "series": {
+    "Confirmación de Órdenes": [1200, 1350, 980],
+    "Despacho de Órdenes":     [800,  820,  760]
+  }
 }
 ```
 
 ---
 
 ### 4. Detalle de Envíos (Detail)
-Consulta paginada con búsqueda y filtros sobre el registro individual de mensajes enviados.
+Consulta paginada con búsqueda y filtros sobre el registro operativo subcuenta × proceso. Incluye el campo `unreported` que representa la diferencia entre órdenes procesadas y mensajes con reporte (entregados + fallidos), permitiendo identificar gaps de instrumentación.
 
 * **Ruta:** `GET /api/detail`
 * **Query Parameters:**
@@ -235,33 +233,38 @@ Consulta paginada con búsqueda y filtros sobre el registro individual de mensaj
   |---|---|---|---|---|
   | `from` | String | **Sí** | - | Fecha inicio (`YYYY-MM-DD`) |
   | `to` | String | **Sí** | - | Fecha fin (`YYYY-MM-DD`) |
-  | `country` | String | No | - | Filtro por país |
-  | `process` | String | No | - | Filtro por proceso |
-  | `search` | String | No | - | Búsqueda por teléfono, ID o cuenta |
-  | `limit` | Number | No | `50` | Máximo 200 registros |
+  | `country` | String | No | - | Filtro por nombre de país |
+  | `process` | String | No | - | Filtro por nombre de proceso |
+  | `search` | String | No | - | Búsqueda parcial por nombre de subcuenta |
+  | `limit` | Number | No | `50` | Máximo 200 registros por página |
   | `offset` | Number | No | `0` | Desplazamiento para paginación |
 
 * **Respuesta Exitosa (200 OK):**
 ```json
 {
-  "pagination": {
-    "total": 1250,
-    "limit": 50,
-    "offset": 0
-  },
-  "data": [
+  "total": 1250,
+  "limit": 50,
+  "offset": 0,
+  "rows": [
     {
-      "id": "MSG-982341",
-      "account": "Dropi CO Main",
-      "phone": "+573001234567",
+      "code": "CO",
       "country": "Colombia",
-      "process": "Confirmación Pedido",
-      "status": "DELIVERED",
-      "created_at": "2026-07-27T14:32:00.000Z"
+      "account": "Dropi Logística",
+      "process": "Logística (Garantías) - Proveedores",
+      "processed": 149,
+      "delivered": 145,
+      "failed": 2,
+      "unreported": 2,
+      "rate": 97.3,
+      "cost": 1.21
     }
   ]
 }
 ```
+
+> **Coherencia de datos:** `processed = delivered + failed + unreported`
+>
+> `unreported` = órdenes sin ningún mensaje registrado en `fact_mensajes_ghl`. Un valor > 0 indica un gap de instrumentación (la orden existe pero GHL no envió el webhook de resultado).
 
 ---
 
@@ -282,18 +285,18 @@ Obtiene el listado detallado de mensajes no entregados filtrable por motivo de f
 * **Respuesta Exitosa (200 OK):**
 ```json
 {
-  "pagination": {
-    "total": 320,
-    "limit": 50,
-    "offset": 0
-  },
-  "data": [
+  "total": 320,
+  "limit": 50,
+  "offset": 0,
+  "rows": [
     {
-      "id": "MSG-982100",
-      "phone": "+573119876543",
+      "telefono": "+573119876543",
+      "contact_id": "ct_abc123",
       "country": "Colombia",
-      "failure_reason": "Número no registrado en WhatsApp",
-      "created_at": "2026-07-27T10:15:22.000Z"
+      "process": "Confirmación de Órdenes",
+      "template": "confirmacion_pedido_v2",
+      "workflow_id": "wf_0041",
+      "date": "2026-07-27T10:15:22.000Z"
     }
   ]
 }
@@ -308,13 +311,12 @@ Retorna la lista de razones de fallo registradas con su conteo para construir fi
 * **Query Parameters:** Ninguno
 * **Respuesta Exitosa (200 OK):**
 ```json
-{
-  "reasons": [
-    { "reason": "Número no registrado en WhatsApp", "count": 1420 },
-    { "reason": "Teléfono apago / sin señal", "count": 890 },
-    { "reason": "Bloqueado por el usuario", "count": 310 }
-  ]
-}
+[
+  { "reason": "Número no registrado en WhatsApp" },
+  { "reason": "Teléfono apagado / sin señal" },
+  { "reason": "Bloqueado por el usuario" }
+]
+```
 ```
 
 ---
@@ -328,8 +330,8 @@ Retorna la lista de cuentas operativas registradas en la plataforma.
 ```json
 {
   "accounts": [
-    { "name": "Dropi CO Main", "status": "ACTIVE" },
-    { "name": "Dropi MX Principal", "status": "ACTIVE" }
+    { "name": "Dropi Logística" },
+    { "name": "Seguimiento - Dropi Proveedores" }
   ]
 }
 ```
@@ -348,23 +350,39 @@ Obtiene el resumen operativo y desglose por proceso de una cuenta específica.
 * **Respuesta Exitosa (200 OK):**
 ```json
 {
-  "account": "Dropi CO Main",
-  "range": { "from": "2026-07-01", "to": "2026-07-27" },
   "kpis": {
-    "total_sent": 45000,
-    "total_delivered": 43200,
-    "total_failed": 1800,
-    "delivery_rate": 96.0,
-    "status": "GREEN"
+    "processed": 45000,
+    "delivered": 43200,
+    "rate": 96.0,
+    "cost": 380.50,
+    "sema": "green"
   },
-  "worklist": [
+  "processes": [
     {
-      "process": "Notificación Guía",
-      "total_sent": 25000,
-      "total_delivered": 24200,
-      "delivery_rate": 96.8
+      "name": "Logística (Garantías) - Proveedores",
+      "process": "Logística (Garantías) - Proveedores",
+      "processed": 149,
+      "delivered": 145,
+      "failed": 2,
+      "rate": 97.3,
+      "cost": 1.21,
+      "sema": "green"
     }
-  ]
+  ],
+  "worklist": {
+    "total": 12,
+    "limit": 10,
+    "offset": 0,
+    "rows": [
+      {
+        "phone": "+573119876543",
+        "contactId": "ct_abc123",
+        "process": "Confirmación de Órdenes",
+        "reason": "Número no registrado en WhatsApp",
+        "date": "2026-07-27"
+      }
+    ]
+  }
 }
 ```
 

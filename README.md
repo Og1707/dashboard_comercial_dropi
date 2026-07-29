@@ -70,8 +70,8 @@ Base path: `/api` · Rate limit: **60 req/min por IP**
 | Método | Ruta | Descripción |
 |---|---|---|
 | `GET` | `/api/summary` | KPIs globales + semáforo de salud por país y proceso |
-| `GET` | `/api/trend` | Evolución temporal de envíos (filtrable por país) |
-| `GET` | `/api/detail` | Detalle paginado de envíos individuales |
+| `GET` | `/api/trend` | Evolución temporal de envíos (filtrable por país y subcuenta) |
+| `GET` | `/api/detail` | Detalle paginado subcuenta × proceso con campo `unreported` |
 | `GET` | `/api/not-delivered` | Envíos fallidos con filtros |
 | `GET` | `/api/not-delivered/reasons` | Catálogo de motivos de fallo |
 | `GET` | `/api/accounts` | Listado de cuentas activas |
@@ -126,7 +126,9 @@ Paginación en `/detail` y `/not-delivered`: `limit` (máx. 200) + `offset`.
 
 ```
 ├── public/
-│   └── dashboard_control_whatsapp.html   # Frontend estático
+│   ├── dashboard_control_whatsapp.html   # Frontend estático
+│   ├── logo.png                          # Logo de marca Dropi
+│   └── favicon.png                       # Favicon del dashboard
 ├── server/
 │   ├── index.js                          # Entrypoint + graceful shutdown
 │   └── src/

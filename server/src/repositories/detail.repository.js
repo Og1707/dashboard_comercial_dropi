@@ -104,6 +104,7 @@ const getDetail = async (from, to, { country, process, search, limit = 50, offse
       p.processed,
       COALESCE(mg.delivered, 0)                                                 AS delivered,
       COALESCE(mg.failed, 0)                                                    AS failed,
+      GREATEST(p.processed - COALESCE(mg.delivered, 0) - COALESCE(mg.failed, 0), 0) AS unreported,
       COALESCE(mg.cost, 0)                                                      AS cost,
       CASE
         WHEN p.processed = 0 THEN 0

@@ -13,6 +13,7 @@ const mapRow = (row) => ({
   processed: parseInt(row.processed, 10),
   delivered: parseInt(row.delivered, 10),
   failed: parseInt(row.failed, 10),
+  unreported: parseInt(row.unreported, 10),
   rate: parseFloat(row.rate),
   cost: parseFloat(parseFloat(row.cost).toFixed(2)),
   templateCategory: row.template_category,

@@ -390,7 +390,7 @@
       <div id="volumeHeatmapV2"></div>
     </div>
 
-    <p class="section-label" style="margin-top:28px;">Capa 4 — detalle operativo (esto es lo que gerencia no ve)</p>
+    <p class="section-label" style="margin-top:28px;">Detalle operativo (esto es lo que gerencia no ve)</p>
 
     <div class="panel">
       <p class="section-label">Detalle por país → subcuenta → proceso</p>
@@ -405,7 +405,8 @@
           <tr>
             <th>País</th><th>Subcuenta</th><th>Proceso</th>
             <th style="text-align:right">Procesados</th><th style="text-align:right">Entregados</th>
-            <th style="text-align:right">No entreg.</th><th style="text-align:right">Tasa</th>
+            <th style="text-align:right">No entreg.</th><th style="text-align:right">Sin reporte</th>
+            <th style="text-align:right">Tasa</th>
             <th style="text-align:right">Costo est.</th>
           </tr>
         </thead>
@@ -413,7 +414,6 @@
         <tbody></tbody>
       </table>
       </div>
-      <p class="table-note">Colombia aparece con una fila por proceso porque opera con subcuentas separadas; el resto de los países opera con una sola subcuenta cubriendo los 5 procesos.</p>
     </div>
 
     <div class="panel">
@@ -739,10 +739,15 @@ function renderDetailTable(data){
   const tbody = document.querySelector('#detailTable tbody');
   if(!tbody) return;
   if(!data.rows.length){
-    tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;color:var(--text-faint);padding:20px">Sin registros para los filtros seleccionados.</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;color:var(--text-faint);padding:20px">Sin registros para los filtros seleccionados.</td></tr>`;
     return;
   }
-  tbody.innerHTML = data.rows.map(r=>`
+  tbody.innerHTML = data.rows.map(r=>{
+    const unreported = Number(r.unreported || 0);
+    const unreportedCell = unreported > 0
+      ? `<td class="num" style="color:var(--text-muted);">${unreported.toLocaleString('es')}</td>`
+      : `<td class="num" style="color:var(--text-faint);">—</td>`;
+    return `
     <tr>
       <td class="row-country">${r.code||'—'}</td>
       <td>${r.account||'—'}</td>
@@ -750,14 +755,16 @@ function renderDetailTable(data){
       <td class="num">${Number(r.processed).toLocaleString('es')}</td>
       <td class="num">${Number(r.delivered).toLocaleString('es')}</td>
       <td class="num">${Number(r.failed).toLocaleString('es')}</td>
+      ${unreportedCell}
       <td class="num"><span class="sema ${semaColor(r.rate)}" style="display:inline-block;margin-right:6px;"></span>${Number(r.rate).toFixed(1)}%</td>
       <td class="num">$${Number(r.cost).toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
   // footer
   const existing = tbody.querySelector('tr.footer-row');
   if(!existing){
     const tr=document.createElement('tr'); tr.className='footer-row';
-    tr.innerHTML=`<td colspan="9" style="text-align:center;color:var(--text-faint);font-size:11px;padding-top:12px">Mostrando ${data.rows.length} de ${data.total} registros</td>`;
+    tr.innerHTML=`<td colspan="10" style="text-align:center;color:var(--text-faint);font-size:11px;padding-top:12px">Mostrando ${data.rows.length} de ${data.total} registros</td>`;
     tbody.appendChild(tr);
   }
 }
