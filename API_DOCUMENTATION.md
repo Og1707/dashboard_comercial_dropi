@@ -14,9 +14,10 @@
    - [GET /api/trend](#3-tendencia-temporal-trend)
    - [GET /api/detail](#4-detalle-de-envíos-detail)
    - [GET /api/not-delivered](#5-envíos-no-entregados-not-delivered)
-   - [GET /api/not-delivered/reasons](#6-catálogo-de-motivos-de-fallo)
-   - [GET /api/accounts](#7-listado-de-cuentas-activas)
-   - [GET /api/account/:name](#8-métricas-por-cuenta)
+   - [GET /api/not-delivered/export](#6-exportación-csv-de-no-entregados)
+   - [GET /api/not-delivered/reasons](#7-catálogo-de-motivos-de-fallo)
+   - [GET /api/accounts](#8-listado-de-cuentas-activas)
+   - [GET /api/account/:name](#9-métricas-por-cuenta)
 6. [Esquema Estándar de Errores](#esquema-estándar-de-errores)
 7. [Variables de Entorno y Configuración](#variables-de-entorno-y-configuración)
 

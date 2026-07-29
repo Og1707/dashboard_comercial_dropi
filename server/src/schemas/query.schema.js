@@ -59,6 +59,18 @@ const notDeliveredQuerySchema = dateRangeSchema.and(
   })
 );
 
+/**
+ * Schema para exportación CSV de no entregados.
+ * No incluye limit/offset — el endpoint retorna todos los registros que
+ * cumplen los filtros de fecha y opcionales (country, reason).
+ */
+const exportNotDeliveredQuerySchema = dateRangeSchema.and(
+  z.object({
+    country: z.string().max(100).optional(),
+    reason: z.string().max(200).optional(),
+  })
+);
+
 const accountParamsSchema = z.object({
   name: z.string().min(1).max(200),
 });
@@ -75,6 +87,7 @@ module.exports = {
   trendQuerySchema,
   detailQuerySchema,
   notDeliveredQuerySchema,
+  exportNotDeliveredQuerySchema,
   accountParamsSchema,
   accountQuerySchema,
 };

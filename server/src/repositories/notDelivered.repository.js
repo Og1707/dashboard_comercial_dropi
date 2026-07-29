@@ -92,4 +92,53 @@ const getFailureReasons = async () => {
   return rows.map((r) => r.reason);
 };
 
-module.exports = { getNotDelivered, getFailureReasons };
+/**
+ * Todos los contactos no entregados para exportación CSV (sin paginación).
+ * Reutiliza la misma lógica de filtros que getNotDelivered pero sin LIMIT/OFFSET.
+ */
+const getNotDeliveredForExport = async (from, to, { country, reason } = {}) => {
+  const params = [from, to];
+  const filters = [];
+
+  if (country) {
+    params.push(country);
+    filters.push(`dp.nombre_pais = $${params.length}`);
+  }
+  if (reason) {
+    params.push(`%${reason}%`);
+    filters.push(`e.descripcion_error ILIKE $${params.length}`);
+  }
+
+  const whereExtra = filters.length ? 'AND ' + filters.join(' AND ') : '';
+
+  const sql = `
+    SELECT
+      c.telefono,
+      c.ghl_id                                          AS contact_id,
+      dp.nombre_pais                                    AS country,
+      dp.codigo_iso2                                    AS code,
+      dte.nombre_tipo_envio                             AS process,
+      COALESCE(m.plantilla, '—')                        AS template,
+      COALESCE(m.workflow_id, '—')                      AS workflow_id,
+      COALESCE(e.descripcion_error, 'Desconocido')      AS reason,
+      m.fecha_envio                                     AS date
+    FROM ${SCHEMA}.fact_mensajes_ghl m
+    INNER JOIN ${SCHEMA}.dim_contactos c    ON m.id_contacto  = c.id_contacto
+    INNER JOIN ${SCHEMA}.dim_tipo_envio dte ON m.id_tipo_envio = dte.id_tipo_envio
+    INNER JOIN ${SCHEMA}.paises dp          ON m.id_pais       = dp.id_pais
+    LEFT  JOIN ${SCHEMA}.fact_registro_errores e
+      ON e.id_contacto    = m.id_contacto
+      AND e.id_tipo_envio = m.id_tipo_envio
+      AND e.fecha_error::date = m.fecha_envio::date
+    WHERE m.entregado = FALSE
+      AND m.fecha_envio >= $1::date
+      AND m.fecha_envio < ($2::date + INTERVAL '1 day')
+      ${whereExtra}
+    ORDER BY m.fecha_envio DESC
+  `;
+
+  const { rows } = await db.query(sql, params);
+  return rows;
+};
+
+module.exports = { getNotDelivered, getFailureReasons, getNotDeliveredForExport };

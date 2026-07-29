@@ -430,6 +430,11 @@
       </table>
       </div>
       <div id="ndPagination" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:14px;padding-top:10px;border-top:1px solid var(--border);">
+        <button id="btnExportNd" class="btn-mini" disabled
+          style="margin-right:auto; border-color:var(--brand); color:var(--brand);"
+          title="Descarga todos los registros del período con los filtros activos">
+          ↓ Exportar CSV
+        </button>
         <span id="ndPageInfo" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);"></span>
         <button id="btnNdPrev" class="btn-mini" disabled>← Anterior</button>
         <button id="btnNdNext" class="btn-mini" disabled>Siguiente →</button>
@@ -797,6 +802,18 @@ function renderNotDeliveredTable(data){
   const label = document.getElementById('ndTotalLabel');
   if(label) label.textContent = total > 0 ? `— ${total.toLocaleString('es')} en total en el período` : '';
 
+  // Botón de exportación: habilitado solo si hay registros
+  const btnExport = document.getElementById('btnExportNd');
+  if(btnExport){
+    if(total > 0){
+      btnExport.disabled = false;
+      btnExport.textContent = `↓ Exportar CSV (${total.toLocaleString('es')} registros)`;
+    } else {
+      btnExport.disabled = true;
+      btnExport.textContent = '↓ Exportar CSV';
+    }
+  }
+
   if(!rows.length){
     tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:20px">Sin contactos no entregados en este período.</td></tr>`;
   } else {
@@ -848,6 +865,24 @@ document.getElementById('btnNdPrev')?.addEventListener('click', ()=>{
 document.getElementById('btnNdNext')?.addEventListener('click', ()=>{
   ndFilters.offset += ndFilters.limit;
   loadNotDelivered();
+});
+
+/* ── EXPORTACIÓN CSV — NO ENTREGADOS ─────────────────── */
+document.getElementById('btnExportNd')?.addEventListener('click', ()=>{
+  const params = new URLSearchParams({
+    from: currentFrom,
+    to:   currentTo,
+    ...(ndFilters.country && { country: ndFilters.country }),
+    ...(ndFilters.reason  && { reason:  ndFilters.reason }),
+  });
+
+  // El browser dispara la descarga directamente — sin JS adicional
+  const a = document.createElement('a');
+  a.href = `/api/not-delivered/export?${params}`;
+  a.download = ''; // usa el filename que manda el servidor vía Content-Disposition
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 });
 
 /* ── UTILIDAD DE DEBOUNCE (Optimizador de rendimiento) ── */

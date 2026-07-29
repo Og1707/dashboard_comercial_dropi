@@ -21,4 +21,22 @@ const getFailureReasons = async (req, res, next) => {
   }
 };
 
-module.exports = { getNotDelivered, getFailureReasons };
+const exportNotDelivered = async (req, res, next) => {
+  try {
+    const { from, to, country, reason } = req.validated_query;
+    const { buffer, count } = await notDeliveredService.exportNotDeliveredCsv(from, to, { country, reason });
+
+    const filename = `no_entregados_${from}_${to}.csv`;
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', buffer.length);
+    res.setHeader('X-Record-Count', count);
+
+    res.send(buffer);
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { getNotDelivered, getFailureReasons, exportNotDelivered };
