@@ -3,27 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Control Operativo Masivos — WhatsApp | Dropi</title>
+<title>Control Operativo Masivos | Dropi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="icon" type="image/png" href="/favicon.png">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0F1418;
-    --surface:#171E24;
-    --surface-2:#1D262D;
-    --border:rgba(255,255,255,0.08);
-    --border-strong:rgba(255,255,255,0.14);
-    --text:#E7ECEF;
-    --text-muted:#8CA0AE;
-    --text-faint:#5A6A75;
-    --green:#2FBF71;
-    --green-dim:rgba(47,191,113,0.14);
-    --red:#E5484D;
-    --red-dim:rgba(229,72,77,0.14);
-    --amber:#F2A93B;
-    --amber-dim:rgba(242,169,59,0.14);
-    --cyan:#3FB6D3;
-    --cyan-dim:rgba(63,182,211,0.14);
+    --bg:#F3F4F6;
+    --surface:#FFFFFF;
+    --surface-2:#F9FAFB;
+    --border:#E5E7EB;
+    --border-strong:#D1D5DB;
+    --text:#111827;
+    --text-muted:#6B7280;
+    --text-faint:#9CA3AF;
+    --green:#059669;
+    --green-dim:rgba(5,150,105,0.10);
+    --red:#DC2626;
+    --red-dim:rgba(220,38,38,0.10);
+    --amber:#D97706;
+    --amber-dim:rgba(217,119,6,0.10);
+    --brand:#F28539;
+    --brand-hover:#E66F1D;
+    --brand-light:#FFF2E8;
+    --brand-dim:rgba(242,133,57,.12);
+    --cyan:#F28539;
+    --cyan-dim:rgba(242,133,57,.12);
     --radius:10px;
     --radius-sm:6px;
   }
@@ -46,14 +51,14 @@
     gap:16px;
     padding:20px 28px;
     border-bottom:1px solid var(--border);
-    background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);
+    background:linear-gradient(180deg, rgba(242,133,57,0.04), transparent);
   }
   .brand{display:flex; align-items:center; gap:12px;}
   .brand-logo{
     height:40px;
     width:auto;
     object-fit:contain;
-    filter:drop-shadow(0 2px 8px rgba(0, 200, 255, 0.25));
+    filter:none;
   }
   .brand-text h1{font-size:15px;margin:0;font-weight:600;letter-spacing:0.2px;}
   .brand-text p{margin:2px 0 0;font-size:12px;color:var(--text-muted);}
@@ -68,7 +73,7 @@
     padding:9px 16px;border-radius:999px;border:none;background:transparent;
     color:var(--text-muted); cursor:pointer; transition:all .15s ease;
   }
-  .tab-btn.active{background:var(--surface-2); color:var(--text); box-shadow:inset 0 0 0 1px var(--border-strong);}
+  .tab-btn.active{background:var(--brand-light); color:var(--brand); box-shadow:inset 0 0 0 1px rgba(242,133,57,0.35);}
   .tab-btn:hover:not(.active){color:var(--text);}
 
   .status-cluster{display:flex; align-items:center; gap:18px;}
@@ -90,20 +95,20 @@
     background:transparent; border:none; border-radius:5px; color:var(--text-muted);
     padding:6px 9px; cursor:pointer; transition:all .15s ease;
   }
-  .quick-btn.active{background:var(--surface-2); color:var(--cyan); box-shadow:inset 0 0 0 1px rgba(63,182,211,0.3);}
+  .quick-btn.active{background:var(--surface-2); color:var(--brand); box-shadow:inset 0 0 0 1px rgba(242,133,57,0.35);}
   .quick-btn:hover:not(.active){color:var(--text);}
   .date-inputs{display:flex; align-items:center; gap:6px;}
   .date-sep{color:var(--text-faint); font-size:12px;}
   .date-input{
     background:var(--surface); color:var(--text); border:1px solid var(--border);
     border-radius:var(--radius-sm); padding:7px 8px; font-family:'JetBrains Mono',monospace;
-    font-size:12px; cursor:pointer; color-scheme:dark;
+    font-size:12px; cursor:pointer; color-scheme:light;
   }
-  .date-input:focus{outline:none; border-color:var(--cyan);}
+  .date-input:focus{outline:none; border-color:var(--brand);}
   select.period{
     background:var(--surface); color:var(--text); border:1px solid var(--border);
     border-radius:var(--radius-sm); padding:8px 10px; font-family:'JetBrains Mono',monospace;
-    font-size:12px; cursor:pointer; color-scheme:dark;
+    font-size:12px; cursor:pointer; color-scheme:light;
   }
 
   main{padding:24px 28px 60px; max-width:1360px; margin:0 auto;}
@@ -163,8 +168,8 @@
   .sema.red{background:var(--red);} .sema.amber{background:var(--amber);} .sema.green{background:var(--green);}
   .cost-cell{font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--text-muted); text-align:right;}
   .badge-validation{
-    font-size:10.5px; font-family:'JetBrains Mono',monospace; color:var(--cyan);
-    background:var(--cyan-dim); border:1px solid rgba(63,182,211,0.3);
+    font-size:10.5px; font-family:'JetBrains Mono',monospace; color:var(--brand);
+    background:var(--brand-dim); border:1px solid rgba(242,133,57,0.35);
     padding:3px 7px; border-radius:5px; white-space:nowrap;
   }
 
@@ -180,7 +185,7 @@
     text-transform:uppercase; color:var(--text-faint); padding:8px 10px; border-bottom:1px solid var(--border-strong);
   }
   tbody td{padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:middle;}
-  tbody tr:hover{background:rgba(255,255,255,0.02);}
+  tbody tr:hover{background:rgba(242,133,57,0.04);}
   td.num{font-family:'JetBrains Mono',monospace; text-align:right;}
   .row-country{color:var(--text-muted); font-family:'JetBrains Mono',monospace; font-size:11px;}
   .checks{font-size:13px; letter-spacing:-1px;}
@@ -206,7 +211,7 @@
   .hm-cell.hm-empty{color:var(--text-faint); font-size:10px;}
   .table-note{font-size:11.5px; color:var(--text-faint); margin-top:10px;}
   .table-scroll{overflow-x:auto;}
-  .template-name{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--cyan); white-space:nowrap;}
+  .template-name{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--brand); white-space:nowrap;}
   .workflow-id{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-faint); white-space:nowrap; cursor:help;}
 
   /* ===== vista 3 ===== */
@@ -228,7 +233,7 @@
     background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text);
     padding:6px 10px; border-radius:5px; cursor:pointer;
   }
-  .btn-mini:hover{border-color:var(--cyan); color:var(--cyan);}
+  .btn-mini:hover{border-color:var(--brand); color:var(--brand);}
 
   .footnote{
     margin-top:30px; padding-top:16px; border-top:1px dashed var(--border);
@@ -250,7 +255,7 @@
     <img src="/logo.png" alt="Logo" class="brand-logo">
     <div class="brand-text">
       <h1>Control Operativo Masivos</h1>
-      <p>WhatsApp · Dropi · Red LatAm (10 países)</p>
+      <p>WhatsApp · Dropi</p>
     </div>
   </div>
 
@@ -314,17 +319,17 @@
 
     <div class="split-row">
       <div class="panel">
-        <p class="section-label">Capa 3 — por país (peor → mejor)</p>
+        <p class="section-label">Por país (peor → mejor)</p>
         <div id="countryRanking"></div>
       </div>
       <div class="panel">
-        <p class="section-label">Capa 3 — por proceso (peor → mejor)</p>
+        <p class="section-label">Por proceso (peor → mejor)</p>
         <div id="processRanking"></div>
       </div>
     </div>
 
     <div class="panel">
-      <p class="section-label">Capa 3 — volumen de envíos: país × proceso</p>
+      <p class="section-label">Volumen de envíos: país × proceso</p>
       <div id="volumeHeatmap"></div>
       <p class="table-note">Intensidad del color = volumen relativo de envíos. Responde "¿qué país envía más de qué proceso?" de un vistazo.</p>
     </div>
@@ -337,9 +342,9 @@
   <!-- ============ VISTA 2: OPERATIVO GLOBAL ============ -->
   <section id="v2" class="view">
 
-    <p class="section-label">Capas 1–3 — mismo panorama que gerencia, con integridad del dato incluida</p>
+    <p class="section-label">Panorama operativo global</p>
 
-    <div class="kpi-row" style="grid-template-columns:1fr 1fr 1fr; margin-bottom:16px;">
+    <div class="kpi-row" style="grid-template-columns:1fr 1fr; margin-bottom:16px;">
       <div class="kpi-card">
         <div class="kpi-label">Tasa de entrega global</div>
         <div class="kpi-value" id="kpiRateV2">—</div>
@@ -349,11 +354,6 @@
         <div class="kpi-label">Costo total estimado</div>
         <div class="kpi-value" id="kpiCostV2">—</div>
         <div class="kpi-sub">USD · tarifa por país + tipo de plantilla</div>
-      </div>
-      <div class="kpi-card alert">
-        <div class="kpi-label">Integridad del dato</div>
-        <div class="kpi-value" id="kpiIntegrity" style="font-size:26px;">—</div>
-        <div class="kpi-sub">subcuentas donde procesados ≠ entregados + no entregados</div>
       </div>
     </div>
 
@@ -420,12 +420,11 @@
       <p class="section-label">Listado de contactos no entregados <span id="ndTotalLabel" style="color:var(--red); text-transform:none; letter-spacing:0;"></span></p>
       <div class="filters">
         <select id="filterCountry2"><option value="">País: todos</option></select>
-        <select id="filterReason"><option value="">Motivo: todos</option></select>
       </div>
       <div class="table-scroll">
       <table id="notDeliveredTable">
         <thead>
-          <tr><th>Teléfono</th><th>Contact ID</th><th>País</th><th>Proceso</th><th>Plantilla</th><th>Workflow ID</th><th>Motivo de falla</th><th>Fecha</th></tr>
+          <tr><th>Teléfono</th><th>Contact ID</th><th>País</th><th>Proceso</th><th>Plantilla</th><th>Workflow ID</th><th>Fecha</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -444,27 +443,13 @@
     <div class="account-picker">
       <label>Subcuenta:</label>
       <select id="accountPicker" class="period"></select>
-      <span class="permission-note">* Selector solo para navegar este prototipo — en producción el acceso queda restringido por permisos de Metabase, cada usuario ve únicamente su propia cuenta.</span>
     </div>
 
-    <div class="worklist">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-        <h2 style="margin:0;">Lista de trabajo — no entregados recientes</h2>
-        <span id="worklistTotalLabel" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-faint);"></span>
-      </div>
-      <p style="margin-top:0;">Contactos que no recibieron el mensaje recientemente en esta subcuenta. Prioriza según motivo de falla.</p>
-      <div id="workItems"></div>
-      <div id="worklistPagination" style="display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:14px;padding-top:10px;border-top:1px solid var(--border);">
-        <span id="worklistPageInfo" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);"></span>
-        <button id="btnWorkPrev" class="btn-mini" disabled>← Anterior</button>
-        <button id="btnWorkNext" class="btn-mini" disabled>Siguiente →</button>
-      </div>
-    </div>
 
     <div class="kpi-row" style="grid-template-columns:1fr 1.2fr 1.2fr 1fr;">
       <div class="kpi-card">
         <div class="kpi-label">Procesos Asignados</div>
-        <div class="kpi-value" id="acctProcessesCount" style="color:var(--cyan);">—</div>
+        <div class="kpi-value" id="acctProcessesCount" style="color:var(--brand);">—</div>
         <div class="kpi-sub">Tipos de envío habilitados</div>
       </div>
       <div class="kpi-card">
@@ -511,12 +496,12 @@
 
 /* ---------- Utilidades de UI ---------- */
 const PROCESS_COLORS = {
-  'Confirmación de Órdenes':  '#3FB6D3',
+  'Confirmación de Órdenes':  '#F28539',
   'Despacho de Órdenes':      '#7C8CF8',
   'Garantías — Dropshippers': '#C77DFF',
   'Garantías — Proveedores':  '#D9A441',
 };
-const COLOR_FALLBACK = ['#3FB6D3','#7C8CF8','#C77DFF','#D9A441','#2FBF71','#F2A93B'];
+const COLOR_FALLBACK = ['#F28539','#7C8CF8','#C77DFF','#D9A441','#2FBF71','#E66F1D'];
 
 function getProcessColor(name, idx){ return PROCESS_COLORS[name] || COLOR_FALLBACK[idx % COLOR_FALLBACK.length]; }
 
@@ -606,7 +591,7 @@ function renderMultiLineSVG(containerId, seriesMap, processNames){
   const y=v=>padT+plotH-(v/maxV)*plotH;
   function linePath(series){return series.map((v,i)=>(i===0?'M':'L')+x(i).toFixed(1)+','+y(v).toFixed(1)).join(' ');}
   let grid='';
-  for(let d=0;d<=4;d++){const v=(maxV/4)*d;const gy=y(v);grid+=`<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${W-padR}" y2="${gy.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`;grid+=`<text x="${(padL-8)}" y="${(gy+3).toFixed(1)}" text-anchor="end">${Math.round(v).toLocaleString('es')}</text>`;}
+  for(let d=0;d<=4;d++){const v=(maxV/4)*d;const gy=y(v);grid+=`<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${W-padR}" y2="${gy.toFixed(1)}" stroke="rgba(0,0,0,0.07)" stroke-width="1"/>`;grid+=`<text x="${(padL-8)}" y="${(gy+3).toFixed(1)}" text-anchor="end">${Math.round(v).toLocaleString('es')}</text>`;}
   let xLabels='';
   const step=Math.max(1,Math.round(n/8));
   for(let i=0;i<n;i+=step){xLabels+=`<text x="${x(i).toFixed(1)}" y="${H-4}" text-anchor="middle">${cachedDays[i]}</text>`;}
@@ -671,17 +656,23 @@ function renderHeatmap(targetId, heatmapRows, processes){
   const header = `<tr><th>País</th>${procNames.map(n=>`<th>${n}</th>`).join('')}</tr>`;
   const rows = countryOrder.map(cname=>{
     const cdata = dataMap[cname];
+    // Si ningún proceso tiene datos reales para este país, omitir la fila
+    const hasData = procNames.some(pname => cdata[pname] !== undefined && cdata[pname] !== 0);
+    if(!hasData) return '';
     const cells = procNames.map(pname=>{
       const v = cdata[pname];
-      if(v===undefined) return `<td class="hm-cell hm-empty">—</td>`;
+      if(v===undefined || v===0) return `<td class="hm-cell hm-empty">—</td>`;
       const intensity = v / maxVal;
-      const bg = `rgba(63,182,211,${(0.07+intensity*0.55).toFixed(2)})`;
+      const bg = `rgba(242,133,57,${(0.07+intensity*0.55).toFixed(2)})`;
       return `<td class="hm-cell" style="background:${bg}">${Number(v).toLocaleString('es')}</td>`;
     }).join('');
     return `<tr><td class="hm-country">${cname} <small>${cdata.code}</small></td>${cells}</tr>`;
   }).join('');
 
-  const table = `<table class="heatmap-table"><thead>${header}</thead><tbody>${rows}</tbody></table>`;
+  const noDataMsg = `<p style="color:var(--text-faint);padding:16px 0;font-size:13px;">Sin envíos registrados para el período seleccionado.</p>`;
+  const table = rows
+    ? `<table class="heatmap-table"><thead>${header}</thead><tbody>${rows}</tbody></table>`
+    : noDataMsg;
   ['volumeHeatmap','volumeHeatmapV2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.innerHTML=table; });
 }
 
@@ -735,11 +726,6 @@ function renderKpis(kpis){
   if(rateV2){ rateV2.textContent=kpis.rate.toFixed(1)+'%'; rateV2.className='kpi-value '+kpis.sema; }
   const costV2 = document.getElementById('kpiCostV2');
   if(costV2) costV2.textContent = fmtUSD(kpis.cost);
-  const integrity = document.getElementById('kpiIntegrity');
-  if(integrity){
-    integrity.textContent = kpis.integrityIssues > 0 ? `⚠ ${kpis.integrityIssues}` : '✓ OK';
-    integrity.style.color = kpis.integrityIssues > 0 ? 'var(--amber)' : 'var(--green)';
-  }
 
   // Sub labels
   const subText = `${fmt(kpis.processed)} mensajes procesados · período seleccionado`;
@@ -805,7 +791,7 @@ function renderNotDeliveredTable(data){
   if(label) label.textContent = total > 0 ? `— ${total.toLocaleString('es')} en total en el período` : '';
 
   if(!rows.length){
-    tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;color:var(--text-faint);padding:20px">Sin contactos no entregados en este período.</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;color:var(--text-faint);padding:20px">Sin contactos no entregados en este período.</td></tr>`;
   } else {
     tbody.innerHTML = rows.map(r=>`
       <tr>
@@ -815,7 +801,6 @@ function renderNotDeliveredTable(data){
         <td>${r.process||'—'}</td>
         <td class="template-name">${r.template||'—'}</td>
         <td class="workflow-id">${r.workflow_id||'—'}</td>
-        <td>${r.reason||'—'}</td>
         <td class="mono">${r.date ? new Date(r.date).toLocaleString('es-CO',{dateStyle:'short',timeStyle:'short'}) : '—'}</td>
       </tr>`).join('');
   }
@@ -890,7 +875,6 @@ document.getElementById('filterCountry')?.addEventListener('change', e=>{ detail
 document.getElementById('filterProcess')?.addEventListener('change', e=>{ detailFilters.process=e.target.value; detailFilters.offset=0; loadDetail(); });
 document.getElementById('filterSearch')?.addEventListener('input', debounce(e=>{ detailFilters.search=e.target.value.trim(); detailFilters.offset=0; loadDetail(); }, 350));
 document.getElementById('filterCountry2')?.addEventListener('change', e=>{ ndFilters.country=e.target.value; ndFilters.offset=0; loadNotDelivered(); });
-document.getElementById('filterReason')?.addEventListener('change', debounce(e=>{ ndFilters.reason=e.target.value.trim(); ndFilters.offset=0; loadNotDelivered(); }, 350));
 
 /* ── VISTA 3 — POR CUENTA ────────────────────────────── */
 const picker = document.getElementById('accountPicker');
